@@ -1,0 +1,21 @@
+# CQ01: Lembaga regulator apa saja yang telah menyetujui sildenafil, beserta tanggal persetujuannya?
+# EN:   Which regulatory agencies have approved sildenafil, and on which dates?
+# Expected: EMA (1998-09-13), FDA (1998-03-27)
+# Type: SELECT
+PREFIX :     <https://itb.ac.id/a5103/tubes_2#>
+PREFIX res:  <https://itb.ac.id/a5103/tubes_2/resource/>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX xsd:  <http://www.w3.org/2001/XMLSchema#>
+
+SELECT ?agencyName ?approvalDate
+WHERE {
+  ?drug a :Drug ;
+        rdfs:label ?drugName ;
+        :hasApproval ?approval .
+  FILTER (LCASE(STR(?drugName)) = "sildenafil")
+  ?approval a :RegulatoryApproval ;
+            :approvedBy ?agency ;
+            :approvalDate ?approvalDate .
+  ?agency rdfs:label ?agencyName .
+}
+ORDER BY ?agencyName

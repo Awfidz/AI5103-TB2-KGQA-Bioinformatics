@@ -1,0 +1,44 @@
+====================================================================================================
+CQ05_TRASTUZUMAB_CHECK  [SELECT]
+Trastuzumab adalah obat biologik non-molekul kecil untuk kanker payudara HER2+ yang telah disetujui regulator dan memiliki sinyal efek samping kuat (Ejection fraction decreased). Apakah trastuzumab tergolong obat berizin dengan risiko keamanan tinggi (memiliki kontraindikasi sekaligus sinyal efek samping kuat)?
+====================================================================================================
+
+QUERY
+----------------------------------------------------------------------------------------------------
+# CQ05: Trastuzumab adalah obat biologik non-molekul kecil untuk kanker payudara HER2+ yang telah disetujui
+#       regulator dan memiliki sinyal efek samping kuat (Ejection fraction decreased). Apakah trastuzumab
+#       tergolong obat berizin dengan risiko keamanan tinggi (memiliki kontraindikasi sekaligus sinyal efek
+#       samping kuat)?
+# EN:   Is trastuzumab a high-risk approved drug (approved, with a contraindication and a strong adverse signal)?
+# Expected: False (not a small-molecule drug, and no Contraindication record)
+# Type: SELECT (yes/no question; each part of the :HighRiskApprovedDrug definition is shown separately)
+PREFIX :     <https://itb.ac.id/a5103/tubes_2#>
+PREFIX res:  <https://itb.ac.id/a5103/tubes_2/resource/>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX xsd:  <http://www.w3.org/2001/XMLSchema#>
+
+SELECT ?drugName ?smallMoleculeDrug ?approved ?hasContraindication ?hasStrongAdverseSignal ?answer
+WHERE {
+  ?drug a :Drug ;
+        rdfs:label ?drugName .
+  FILTER (LCASE(STR(?drugName)) = "trastuzumab")
+
+  BIND (EXISTS { ?drug :smiles ?smiles } AS ?smallMoleculeDrug)
+  BIND (EXISTS { ?drug :hasApproval ?approval } AS ?approved)
+  BIND (EXISTS { ?drug :hasAssociation ?ci . ?ci a :Contraindication } AS ?hasContraindication)
+  BIND (EXISTS {
+    ?drug :hasAdverseSignal ?signal .
+    ?signal :llrScore ?llr .
+    FILTER (?llr >= 100.0)
+  } AS ?hasStrongAdverseSignal)
+
+  BIND (?approved && ?hasContraindication && ?hasStrongAdverseSignal AS ?answer)
+}
+
+RESULT
+----------------------------------------------------------------------------------------------------
+drugName    | smallMoleculeDrug | approved | hasContraindication | hasStrongAdverseSignal | answer
+------------+-------------------+----------+---------------------+------------------------+-------
+trastuzumab | false             | true     | false               | true                   | false
+
+(1 row(s))

@@ -1,0 +1,41 @@
+====================================================================================================
+CQ13_FDA_BEFORE_1990  [SELECT]
+Obat apa saja yang disetujui oleh FDA sebelum tahun 1990, beserta tanggal persetujuannya?
+====================================================================================================
+
+QUERY
+----------------------------------------------------------------------------------------------------
+# CQ13: Obat apa saja yang disetujui oleh FDA sebelum tahun 1990, beserta tanggal persetujuannya?
+# EN:   Which drugs were approved by the FDA before 1990, and on which dates?
+# Expected: chloroquine (1949-10-31), diazepam (1963-11-15), ciprofloxacin (1987-10-22), omeprazole (1989-09-14)
+# Type: SELECT
+# Note: :approvalDate is stored as an xsd:string in ISO "YYYY-MM-DD" form, which sorts chronologically,
+#       so a string comparison is used (portable: rdflib cannot cast strings to xsd:date).
+PREFIX :     <https://itb.ac.id/a5103/tubes_2#>
+PREFIX res:  <https://itb.ac.id/a5103/tubes_2/resource/>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX xsd:  <http://www.w3.org/2001/XMLSchema#>
+
+SELECT ?drugName ?approvalDate
+WHERE {
+  ?drug a :Drug ;
+        rdfs:label ?drugName ;
+        :hasApproval ?approval .
+  ?approval :approvedBy ?agency ;
+            :approvalDate ?approvalDate .
+  ?agency rdfs:label ?agencyName .
+  FILTER (STR(?agencyName) = "FDA")
+  FILTER (STR(?approvalDate) < "1990-01-01")
+}
+ORDER BY ?approvalDate
+
+RESULT
+----------------------------------------------------------------------------------------------------
+drugName      | approvalDate
+--------------+-------------
+chloroquine   | 1949-10-31
+diazepam      | 1963-11-15
+ciprofloxacin | 1987-10-22
+omeprazole    | 1989-09-14
+
+(4 row(s))

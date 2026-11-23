@@ -1,0 +1,957 @@
+AI5103 Foundational AI - KGQA Assignment, Step 3: SPARQL queries and results
+Ontology: Pharmacotherapy and Drug Discovery Ontology (https://itb.ac.id/a5103/tubes_2)
+Backend:  Local rdflib graph (drug_discovery.ttl) - 1671 triples
+Run at:   2026-11-21 16:17
+
+Contents: CQ01-CQ15 (competency questions as SELECT/CONSTRUCT), U1 INSERT, U2 DELETE with FILTER, U3 DESCRIBE.
+
+====================================================================================================
+CQ01_SILDENAFIL_APPROVALS  [SELECT]
+Lembaga regulator apa saja yang telah menyetujui sildenafil, beserta tanggal persetujuannya?
+====================================================================================================
+
+QUERY
+----------------------------------------------------------------------------------------------------
+# CQ01: Lembaga regulator apa saja yang telah menyetujui sildenafil, beserta tanggal persetujuannya?
+# EN:   Which regulatory agencies have approved sildenafil, and on which dates?
+# Expected: EMA (1998-09-13), FDA (1998-03-27)
+# Type: SELECT
+PREFIX :     <https://itb.ac.id/a5103/tubes_2#>
+PREFIX res:  <https://itb.ac.id/a5103/tubes_2/resource/>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX xsd:  <http://www.w3.org/2001/XMLSchema#>
+
+SELECT ?agencyName ?approvalDate
+WHERE {
+  ?drug a :Drug ;
+        rdfs:label ?drugName ;
+        :hasApproval ?approval .
+  FILTER (LCASE(STR(?drugName)) = "sildenafil")
+  ?approval a :RegulatoryApproval ;
+            :approvedBy ?agency ;
+            :approvalDate ?approvalDate .
+  ?agency rdfs:label ?agencyName .
+}
+ORDER BY ?agencyName
+
+RESULT
+----------------------------------------------------------------------------------------------------
+agencyName | approvalDate
+-----------+-------------
+EMA        | 1998-09-13
+FDA        | 1998-03-27
+
+(2 row(s))
+
+====================================================================================================
+CQ02_COMPLEX_TARGETS  [SELECT]
+Target biologis berupa kompleks multi-protein apa saja yang ditargetkan oleh diazepam atau omeprazole, beserta pengenal UniProt protein penyusunnya?
+====================================================================================================
+
+QUERY
+----------------------------------------------------------------------------------------------------
+# CQ02: Target biologis berupa kompleks multi-protein apa saja yang ditargetkan oleh diazepam atau omeprazole,
+#       beserta pengenal UniProt protein penyusunnya?
+# EN:   Which multi-protein complex targets are targeted by diazepam or omeprazole, and what are the UniProt
+#       accessions of their component proteins?
+# Expected: the three GABA-A receptor subtypes (diazepam); Potassium-transporting ATPase, P20648 + P51164 (omeprazole)
+# Type: SELECT
+# Note: a protein complex target is the defined class :ProteinComplexTarget (>= 2 :hasComponent proteins),
+#       expressed with GROUP BY / HAVING so no reasoner is needed.
+PREFIX :     <https://itb.ac.id/a5103/tubes_2#>
+PREFIX res:  <https://itb.ac.id/a5103/tubes_2/resource/>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX xsd:  <http://www.w3.org/2001/XMLSchema#>
+
+SELECT ?drugName ?targetName
+       (COUNT(DISTINCT ?protein) AS ?subunits)
+       (GROUP_CONCAT(DISTINCT ?accession; separator=", ") AS ?uniprotAccessions)
+WHERE {
+  ?drug a :Drug ;
+        rdfs:label ?drugName ;
+        :targets ?target .
+  FILTER (LCASE(STR(?drugName)) IN ("diazepam", "omeprazole"))
+  ?target a :Target ;
+          rdfs:label ?targetName ;
+          :hasComponent ?protein .
+  ?protein :uniprotAccession ?accession .
+}
+GROUP BY ?drugName ?targetName
+HAVING (COUNT(DISTINCT ?protein) >= 2)
+ORDER BY ?drugName ?targetName
+
+RESULT
+----------------------------------------------------------------------------------------------------
+drugName   | targetName                             | subunits | uniprotAccessions
+-----------+----------------------------------------+----------+-----------------------
+diazepam   | GABA-A receptor alpha-1/beta-2/gamma-2 | 3        | P14867, P18507, P47870
+diazepam   | GABA-A receptor alpha-2/beta-3/gamma-2 | 3        | P18507, P28472, P47869
+diazepam   | GABA-A receptor alpha-3/beta-3/gamma-2 | 3        | P18507, P28472, P34903
+omeprazole | Potassium-transporting ATPase          | 2        | P20648, P51164
+
+(4 row(s))
+
+====================================================================================================
+CQ03_DIAZEPAM_CHECK  [SELECT]
+Seorang pasien datang dengan Alcohol withdrawal syndrome, tetapi saat diperiksa masih dalam kondisi Alcohol intoxication. Apakah diazepam diindikasikan resmi untuk kondisi pertama, namun sekaligus dikontraindikasikan pada kondisi kedua dan tergolong obat berizin dengan risiko keamanan tinggi?
+====================================================================================================
+
+QUERY
+----------------------------------------------------------------------------------------------------
+# CQ03: Seorang pasien datang dengan Alcohol withdrawal syndrome, tetapi saat diperiksa masih dalam kondisi
+#       Alcohol intoxication. Apakah diazepam diindikasikan resmi untuk kondisi pertama, namun sekaligus
+#       dikontraindikasikan pada kondisi kedua dan tergolong obat berizin dengan risiko keamanan tinggi?
+# EN:   Is diazepam officially indicated for alcohol withdrawal syndrome, contraindicated in alcohol
+#       intoxication, and a high-risk approved drug?
+# Expected: True
+# Type: SELECT (yes/no question: each condition is an EXISTS test, ?answer is their conjunction)
+# Note: high-risk approved drug = :HighRiskApprovedDrug = an approval, a contraindication and a strong
+#       adverse signal (LLR >= 100), written out so it works without a reasoner.
+PREFIX :     <https://itb.ac.id/a5103/tubes_2#>
+PREFIX res:  <https://itb.ac.id/a5103/tubes_2/resource/>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX xsd:  <http://www.w3.org/2001/XMLSchema#>
+
+SELECT ?drugName ?indicatedForWithdrawal ?contraindicatedInIntoxication ?highRiskApprovedDrug ?answer
+WHERE {
+  ?drug a :Drug ;
+        rdfs:label ?drugName .
+  FILTER (LCASE(STR(?drugName)) = "diazepam")
+
+  BIND (EXISTS {
+    ?drug :hasAssociation ?ind .
+    ?ind a :Indication ;
+         :forDisease/rdfs:label ?indDisease .
+    FILTER (LCASE(STR(?indDisease)) = "alcohol withdrawal syndrome")
+  } AS ?indicatedForWithdrawal)
+
+  BIND (EXISTS {
+    ?drug :hasAssociation ?ci .
+    ?ci a :Contraindication ;
+        :forDisease/rdfs:label ?ciDisease .
+    FILTER (LCASE(STR(?ciDisease)) = "alcohol intoxication")
+  } AS ?contraindicatedInIntoxication)
+
+  BIND (EXISTS {
+    ?drug :hasApproval ?approval ;
+          :hasAssociation ?anyCi ;
+          :hasAdverseSignal ?signal .
+    ?anyCi a :Contraindication .
+    ?signal :llrScore ?llr .
+    FILTER (?llr >= 100.0)
+  } AS ?highRiskApprovedDrug)
+
+  BIND (?indicatedForWithdrawal && ?contraindicatedInIntoxication && ?highRiskApprovedDrug AS ?answer)
+}
+
+RESULT
+----------------------------------------------------------------------------------------------------
+drugName | indicatedForWithdrawal | contraindicatedInIntoxication | highRiskApprovedDrug | answer
+---------+------------------------+-------------------------------+----------------------+-------
+diazepam | true                   | true                          | true                 | true
+
+(1 row(s))
+
+====================================================================================================
+CQ04_CIPROFLOXACIN_CHECK  [SELECT]
+Seorang pasien Typhoid fever dengan riwayat Epilepsy dipertimbangkan diberi ciprofloxacin. Apakah ciprofloxacin diindikasikan resmi untuk Typhoid fever, tetapi dikontraindikasikan pada Epilepsy serta memiliki sinyal efek samping kuat (LLR >= 100) berupa Tendon pain?
+====================================================================================================
+
+QUERY
+----------------------------------------------------------------------------------------------------
+# CQ04: Seorang pasien Typhoid fever dengan riwayat Epilepsy dipertimbangkan diberi ciprofloxacin. Apakah
+#       ciprofloxacin diindikasikan resmi untuk Typhoid fever, tetapi dikontraindikasikan pada Epilepsy serta
+#       memiliki sinyal efek samping kuat (LLR >= 100) berupa Tendon pain?
+# EN:   Is ciprofloxacin indicated for typhoid fever, contraindicated in epilepsy, and does it have a strong
+#       adverse signal (LLR >= 100) for tendon pain?
+# Expected: True (Tendon pain, LLR = 1554.115)
+# Type: SELECT (yes/no question, with the supporting LLR value)
+PREFIX :     <https://itb.ac.id/a5103/tubes_2#>
+PREFIX res:  <https://itb.ac.id/a5103/tubes_2/resource/>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX xsd:  <http://www.w3.org/2001/XMLSchema#>
+
+SELECT ?drugName ?indicatedForTyphoid ?contraindicatedInEpilepsy ?tendonPainLLR ?strongTendonPainSignal ?answer
+WHERE {
+  ?drug a :Drug ;
+        rdfs:label ?drugName .
+  FILTER (LCASE(STR(?drugName)) = "ciprofloxacin")
+
+  BIND (EXISTS {
+    ?drug :hasAssociation ?ind .
+    ?ind a :Indication ;
+         :forDisease/rdfs:label ?indDisease .
+    FILTER (LCASE(STR(?indDisease)) = "typhoid fever")
+  } AS ?indicatedForTyphoid)
+
+  BIND (EXISTS {
+    ?drug :hasAssociation ?ci .
+    ?ci a :Contraindication ;
+        :forDisease/rdfs:label ?ciDisease .
+    FILTER (LCASE(STR(?ciDisease)) = "epilepsy")
+  } AS ?contraindicatedInEpilepsy)
+
+  OPTIONAL {
+    ?drug :hasAdverseSignal ?signal .
+    ?signal :reportsEvent/rdfs:label ?eventName ;
+            :llrScore ?tendonPainLLR .
+    FILTER (LCASE(STR(?eventName)) = "tendon pain")
+  }
+  BIND (COALESCE(?tendonPainLLR >= 100.0, false) AS ?strongTendonPainSignal)
+
+  BIND (?indicatedForTyphoid && ?contraindicatedInEpilepsy && ?strongTendonPainSignal AS ?answer)
+}
+
+RESULT
+----------------------------------------------------------------------------------------------------
+drugName      | indicatedForTyphoid | contraindicatedInEpilepsy | tendonPainLLR | strongTendonPainSignal | answer
+--------------+---------------------+---------------------------+---------------+------------------------+-------
+ciprofloxacin | true                | true                      | 1554.115      | true                   | true
+
+(1 row(s))
+
+====================================================================================================
+CQ05_TRASTUZUMAB_CHECK  [SELECT]
+Trastuzumab adalah obat biologik non-molekul kecil untuk kanker payudara HER2+ yang telah disetujui regulator dan memiliki sinyal efek samping kuat (Ejection fraction decreased). Apakah trastuzumab tergolong obat berizin dengan risiko keamanan tinggi (memiliki kontraindikasi sekaligus sinyal efek samping kuat)?
+====================================================================================================
+
+QUERY
+----------------------------------------------------------------------------------------------------
+# CQ05: Trastuzumab adalah obat biologik non-molekul kecil untuk kanker payudara HER2+ yang telah disetujui
+#       regulator dan memiliki sinyal efek samping kuat (Ejection fraction decreased). Apakah trastuzumab
+#       tergolong obat berizin dengan risiko keamanan tinggi (memiliki kontraindikasi sekaligus sinyal efek
+#       samping kuat)?
+# EN:   Is trastuzumab a high-risk approved drug (approved, with a contraindication and a strong adverse signal)?
+# Expected: False (not a small-molecule drug, and no Contraindication record)
+# Type: SELECT (yes/no question; each part of the :HighRiskApprovedDrug definition is shown separately)
+PREFIX :     <https://itb.ac.id/a5103/tubes_2#>
+PREFIX res:  <https://itb.ac.id/a5103/tubes_2/resource/>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX xsd:  <http://www.w3.org/2001/XMLSchema#>
+
+SELECT ?drugName ?smallMoleculeDrug ?approved ?hasContraindication ?hasStrongAdverseSignal ?answer
+WHERE {
+  ?drug a :Drug ;
+        rdfs:label ?drugName .
+  FILTER (LCASE(STR(?drugName)) = "trastuzumab")
+
+  BIND (EXISTS { ?drug :smiles ?smiles } AS ?smallMoleculeDrug)
+  BIND (EXISTS { ?drug :hasApproval ?approval } AS ?approved)
+  BIND (EXISTS { ?drug :hasAssociation ?ci . ?ci a :Contraindication } AS ?hasContraindication)
+  BIND (EXISTS {
+    ?drug :hasAdverseSignal ?signal .
+    ?signal :llrScore ?llr .
+    FILTER (?llr >= 100.0)
+  } AS ?hasStrongAdverseSignal)
+
+  BIND (?approved && ?hasContraindication && ?hasStrongAdverseSignal AS ?answer)
+}
+
+RESULT
+----------------------------------------------------------------------------------------------------
+drugName    | smallMoleculeDrug | approved | hasContraindication | hasStrongAdverseSignal | answer
+------------+-------------------+----------+---------------------+------------------------+-------
+trastuzumab | false             | true     | false               | true                   | false
+
+(1 row(s))
+
+====================================================================================================
+CQ06_DIABETES_INFECTION  [SELECT]
+Seorang pasien Diabetes mellitus type 2 sedang dirawat karena Acute infectious disease. Obat molekul kecil berizin dengan risiko keamanan tinggi apa saja yang diindikasikan untuk kondisi pertama namun dikontraindikasikan pada kondisi kedua, beserta berat molekulnya?
+====================================================================================================
+
+QUERY
+----------------------------------------------------------------------------------------------------
+# CQ06: Seorang pasien Diabetes mellitus type 2 sedang dirawat karena Acute infectious disease. Obat molekul
+#       kecil berizin dengan risiko keamanan tinggi apa saja yang diindikasikan untuk kondisi pertama namun
+#       dikontraindikasikan pada kondisi kedua, beserta berat molekulnya?
+# EN:   Which high-risk approved small-molecule drugs are indicated for type 2 diabetes but contraindicated in
+#       acute infectious disease, and what is their molecular weight?
+# Expected: metformin (129.167 Da)
+# Type: SELECT
+# Note: small molecule = has :smiles (:SmallMoleculeDrug); high-risk approved = approval + contraindication +
+#       strong adverse signal (:HighRiskApprovedDrug).
+PREFIX :     <https://itb.ac.id/a5103/tubes_2#>
+PREFIX res:  <https://itb.ac.id/a5103/tubes_2/resource/>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX xsd:  <http://www.w3.org/2001/XMLSchema#>
+
+SELECT DISTINCT ?drugName ?molecularWeight
+WHERE {
+  ?drug a :Drug ;
+        rdfs:label ?drugName ;
+        :smiles ?smiles ;
+        :molecularWeight ?molecularWeight ;
+        :hasApproval ?approval ;
+        :hasAssociation ?ind , ?ci .
+  ?ind a :Indication ;
+       :forDisease/rdfs:label ?indDisease .
+  FILTER (LCASE(STR(?indDisease)) = "diabetes mellitus type 2")
+  ?ci a :Contraindication ;
+      :forDisease/rdfs:label ?ciDisease .
+  FILTER (LCASE(STR(?ciDisease)) = "acute infectious disease")
+  FILTER EXISTS {
+    ?drug :hasAdverseSignal ?signal .
+    ?signal :llrScore ?llr .
+    FILTER (?llr >= 100.0)
+  }
+}
+ORDER BY ?drugName
+
+RESULT
+----------------------------------------------------------------------------------------------------
+drugName  | molecularWeight
+----------+----------------
+metformin | 129.167
+
+(1 row(s))
+
+====================================================================================================
+CQ07_HYPERCHOLESTEROLEMIA_MYALGIA  [SELECT]
+Seorang pasien Hypercholesterolemia memiliki riwayat Disorder of muscle. Obat berizin dengan risiko keamanan tinggi apa saja yang diindikasikan untuk kondisi pertama, dikontraindikasikan pada kondisi kedua, dan memiliki sinyal efek samping kuat berupa Myalgia?
+====================================================================================================
+
+QUERY
+----------------------------------------------------------------------------------------------------
+# CQ07: Seorang pasien Hypercholesterolemia memiliki riwayat Disorder of muscle. Obat berizin dengan risiko
+#       keamanan tinggi apa saja yang diindikasikan untuk kondisi pertama, dikontraindikasikan pada kondisi
+#       kedua, dan memiliki sinyal efek samping kuat berupa Myalgia?
+# EN:   Which high-risk approved drugs are indicated for hypercholesterolemia, contraindicated in disorder of
+#       muscle, and have a strong adverse signal for myalgia?
+# Expected: atorvastatin (Myalgia, LLR = 4620.818)
+# Type: SELECT
+# Note: the contraindication plus the strong Myalgia signal already make the approved drug a
+#       :HighRiskApprovedDrug.
+PREFIX :     <https://itb.ac.id/a5103/tubes_2#>
+PREFIX res:  <https://itb.ac.id/a5103/tubes_2/resource/>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX xsd:  <http://www.w3.org/2001/XMLSchema#>
+
+SELECT DISTINCT ?drugName ?eventName ?llr
+WHERE {
+  ?drug a :Drug ;
+        rdfs:label ?drugName ;
+        :hasApproval ?approval ;
+        :hasAssociation ?ind , ?ci ;
+        :hasAdverseSignal ?signal .
+  ?ind a :Indication ;
+       :forDisease/rdfs:label ?indDisease .
+  FILTER (LCASE(STR(?indDisease)) = "hypercholesterolemia")
+  ?ci a :Contraindication ;
+      :forDisease/rdfs:label ?ciDisease .
+  FILTER (LCASE(STR(?ciDisease)) = "disorder of muscle")
+  ?signal :reportsEvent/rdfs:label ?eventName ;
+          :llrScore ?llr .
+  FILTER (LCASE(STR(?eventName)) = "myalgia" && ?llr >= 100.0)
+}
+ORDER BY DESC(?llr)
+
+RESULT
+----------------------------------------------------------------------------------------------------
+drugName     | eventName | llr
+-------------+-----------+---------
+atorvastatin | Myalgia   | 4620.818
+
+(1 row(s))
+
+====================================================================================================
+CQ08_OFFLABEL_HEART_FAILURE  [SELECT]
+Seorang dokter mempertimbangkan terapi off-label untuk pasien Chronic heart failure. Obat berizin yang juga digunakan secara off-label apa saja yang memiliki indikasi resmi untuk Hypertensive disorder sekaligus tercatat digunakan secara off-label untuk Chronic heart failure?
+====================================================================================================
+
+QUERY
+----------------------------------------------------------------------------------------------------
+# CQ08: Seorang dokter mempertimbangkan terapi off-label untuk pasien Chronic heart failure. Obat berizin yang
+#       juga digunakan secara off-label apa saja yang memiliki indikasi resmi untuk Hypertensive disorder
+#       sekaligus tercatat digunakan secara off-label untuk Chronic heart failure?
+# EN:   Which approved drugs with an off-label use are officially indicated for hypertensive disorder and are
+#       used off-label for chronic heart failure?
+# Expected: losartan
+# Type: SELECT
+# Note: approved + an indication + an off-label use = the defined class :RepurposedApprovedDrug.
+PREFIX :     <https://itb.ac.id/a5103/tubes_2#>
+PREFIX res:  <https://itb.ac.id/a5103/tubes_2/resource/>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX xsd:  <http://www.w3.org/2001/XMLSchema#>
+
+SELECT DISTINCT ?drugName ?indicationDisease ?offLabelDisease
+WHERE {
+  ?drug a :Drug ;
+        rdfs:label ?drugName ;
+        :hasApproval ?approval ;
+        :hasAssociation ?ind , ?off .
+  ?ind a :Indication ;
+       :forDisease/rdfs:label ?indicationDisease .
+  FILTER (LCASE(STR(?indicationDisease)) = "hypertensive disorder")
+  ?off a :OffLabelUse ;
+       :forDisease/rdfs:label ?offLabelDisease .
+  FILTER (LCASE(STR(?offLabelDisease)) = "chronic heart failure")
+}
+ORDER BY ?drugName
+
+RESULT
+----------------------------------------------------------------------------------------------------
+drugName | indicationDisease     | offLabelDisease
+---------+-----------------------+----------------------
+losartan | Hypertensive disorder | Chronic heart failure
+
+(1 row(s))
+
+====================================================================================================
+CQ09_IMATINIB_PATHWAYS  [CONSTRUCT]
+Jalur biologis manusia (Reactome) apa saja yang dipengaruhi oleh mekanisme kerja imatinib?
+====================================================================================================
+
+QUERY
+----------------------------------------------------------------------------------------------------
+# CQ09: Jalur biologis manusia (Reactome) apa saja yang dipengaruhi oleh mekanisme kerja imatinib?
+# EN:   Which human Reactome pathways are affected by imatinib's mechanism of action?
+# Expected: Signaling by PDGF, Signaling by SCF-KIT, PIP3 activates AKT signaling, Regulation of KIT signaling,
+#           Role of ABL in ROBO-SLIT signaling, Downstream signal transduction, Myogenesis,
+#           Regulation of actin dynamics for phagocytic cup formation
+# Type: CONSTRUCT
+# Note: materialises the property chain :affectsPathway = :targets o :hasComponent o :participatesIn
+#       with a SPARQL property path, so no OWL reasoner is needed.
+PREFIX :     <https://itb.ac.id/a5103/tubes_2#>
+PREFIX res:  <https://itb.ac.id/a5103/tubes_2/resource/>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX xsd:  <http://www.w3.org/2001/XMLSchema#>
+
+CONSTRUCT {
+  ?drug :affectsPathway ?pathway ;
+        rdfs:label ?drugName .
+  ?pathway rdfs:label ?pathwayName .
+}
+WHERE {
+  ?drug a :Drug ;
+        rdfs:label ?drugName .
+  FILTER (LCASE(STR(?drugName)) = "imatinib")
+  ?drug :targets/:hasComponent/:participatesIn ?pathway .
+  ?pathway rdfs:label ?pathwayName .
+}
+
+RESULT
+----------------------------------------------------------------------------------------------------
+@prefix : <https://itb.ac.id/a5103/tubes_2#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix res: <https://itb.ac.id/a5103/tubes_2/resource/> .
+
+res:drug_1423 rdfs:label "imatinib"@en ;
+    :affectsPathway res:pathway_R-HSA-1257604,
+        res:pathway_R-HSA-1433557,
+        res:pathway_R-HSA-1433559,
+        res:pathway_R-HSA-186763,
+        res:pathway_R-HSA-186797,
+        res:pathway_R-HSA-2029482,
+        res:pathway_R-HSA-428890,
+        res:pathway_R-HSA-525793 .
+
+res:pathway_R-HSA-1257604 rdfs:label "PIP3 activates AKT signaling"@en .
+
+res:pathway_R-HSA-1433557 rdfs:label "Signaling by SCF-KIT"@en .
+
+res:pathway_R-HSA-1433559 rdfs:label "Regulation of KIT signaling"@en .
+
+res:pathway_R-HSA-186763 rdfs:label "Downstream signal transduction"@en .
+
+res:pathway_R-HSA-186797 rdfs:label "Signaling by PDGF"@en .
+
+res:pathway_R-HSA-2029482 rdfs:label "Regulation of actin dynamics for phagocytic cup formation"@en .
+
+res:pathway_R-HSA-428890 rdfs:label "Role of ABL in ROBO-SLIT signaling"@en .
+
+res:pathway_R-HSA-525793 rdfs:label "Myogenesis"@en .
+
+(17 triple(s))
+
+====================================================================================================
+CQ10_CHLOROQUINE_SAFETY_PROFILE  [CONSTRUCT]
+Bagaimana profil keamanan lengkap chloroquine (status risiko, status alih fungsi, kontraindikasi pada Deficiency of glucose-6-phosphate dehydrogenase, serta daftar sinyal efek samping kuatnya) untuk audit terapi pasien Falciparum malaria?
+====================================================================================================
+
+QUERY
+----------------------------------------------------------------------------------------------------
+# CQ10: Bagaimana profil keamanan lengkap chloroquine (status risiko, status alih fungsi, kontraindikasi pada
+#       Deficiency of glucose-6-phosphate dehydrogenase, serta daftar sinyal efek samping kuatnya) untuk audit
+#       terapi pasien Falciparum malaria?
+# EN:   What is chloroquine's full safety profile: risk status, repurposing status, contraindication in G6PD
+#       deficiency, and its strong adverse signals?
+# Expected: RDF subgraph with HighRiskApprovedDrug and RepurposedApprovedDrug status, the G6PD contraindication
+#           and 3 strong signals (Treatment failure, Off label use, Hepatitis); the 2 weak signals (< 100) are left out
+# Type: CONSTRUCT
+# Note: the two defined-class memberships are computed with EXISTS and only asserted when they hold
+#       (an unbound ?riskClass / ?repurposedClass drops that triple from the template).
+PREFIX :     <https://itb.ac.id/a5103/tubes_2#>
+PREFIX res:  <https://itb.ac.id/a5103/tubes_2/resource/>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX xsd:  <http://www.w3.org/2001/XMLSchema#>
+
+CONSTRUCT {
+  ?drug a ?riskClass , ?repurposedClass ;
+        rdfs:label ?drugName ;
+        :hasAssociation ?ci ;
+        :hasAdverseSignal ?signal .
+  ?ci a :Contraindication ;
+      :forDisease ?ciDisease .
+  ?ciDisease rdfs:label ?ciDiseaseName .
+  ?signal a :StrongAdverseSignal ;
+          :reportsEvent ?event ;
+          :llrScore ?llr .
+  ?event rdfs:label ?eventName .
+}
+WHERE {
+  ?drug a :Drug ;
+        rdfs:label ?drugName .
+  FILTER (LCASE(STR(?drugName)) = "chloroquine")
+
+  BIND (EXISTS { ?drug :hasApproval ?ap } AS ?approved)
+  BIND (EXISTS { ?drug :hasAssociation ?c0 . ?c0 a :Contraindication } AS ?hasCi)
+  BIND (EXISTS { ?drug :hasAdverseSignal ?s0 . ?s0 :llrScore ?l0 . FILTER (?l0 >= 100.0) } AS ?hasStrong)
+  BIND (EXISTS { ?drug :hasAssociation ?i0 . ?i0 a :Indication } AS ?hasInd)
+  BIND (EXISTS { ?drug :hasAssociation ?o0 . ?o0 a :OffLabelUse } AS ?hasOff)
+  BIND (IF(?approved && ?hasCi && ?hasStrong, :HighRiskApprovedDrug, ?unbound) AS ?riskClass)
+  BIND (IF(?approved && ?hasInd && ?hasOff, :RepurposedApprovedDrug, ?unbound) AS ?repurposedClass)
+
+  {
+    ?drug :hasAssociation ?ci .
+    ?ci a :Contraindication ;
+        :forDisease ?ciDisease .
+    ?ciDisease rdfs:label ?ciDiseaseName .
+    FILTER (LCASE(STR(?ciDiseaseName)) = "deficiency of glucose-6-phosphate dehydrogenase")
+  }
+  UNION
+  {
+    ?drug :hasAdverseSignal ?signal .
+    ?signal :reportsEvent ?event ;
+            :llrScore ?llr .
+    ?event rdfs:label ?eventName .
+    FILTER (?llr >= 100.0)
+  }
+}
+
+RESULT
+----------------------------------------------------------------------------------------------------
+@prefix : <https://itb.ac.id/a5103/tubes_2#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix res: <https://itb.ac.id/a5103/tubes_2/resource/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+res:drug_607 a :HighRiskApprovedDrug,
+        :RepurposedApprovedDrug ;
+    rdfs:label "chloroquine"@en ;
+    :hasAdverseSignal res:signal_SIG029122,
+        res:signal_SIG029131,
+        res:signal_SIG029135 ;
+    :hasAssociation res:assoc_ASSOC037178 .
+
+res:ae_10019717 rdfs:label "Hepatitis"@en .
+
+res:ae_10053762 rdfs:label "Off label use"@en .
+
+res:ae_10066901 rdfs:label "Treatment failure"@en .
+
+res:assoc_ASSOC037178 a :Contraindication ;
+    :forDisease res:disease_21000697 .
+
+res:disease_21000697 rdfs:label "Deficiency of glucose-6-phosphate dehydrogenase"@en .
+
+res:signal_SIG029122 a :StrongAdverseSignal ;
+    :llrScore "148.83"^^xsd:double ;
+    :reportsEvent res:ae_10019717 .
+
+res:signal_SIG029131 a :StrongAdverseSignal ;
+    :llrScore "161.291"^^xsd:double ;
+    :reportsEvent res:ae_10053762 .
+
+res:signal_SIG029135 a :StrongAdverseSignal ;
+    :llrScore "179.042"^^xsd:double ;
+    :reportsEvent res:ae_10066901 .
+
+(22 triple(s))
+
+====================================================================================================
+CQ11_HEPATIC_FAILURE_CONTRAINDICATIONS  [SELECT]
+Obat apa saja yang dikontraindikasikan pada pasien dengan Hepatic failure?
+====================================================================================================
+
+QUERY
+----------------------------------------------------------------------------------------------------
+# CQ11: Obat apa saja yang dikontraindikasikan pada pasien dengan Hepatic failure?
+# EN:   Which drugs are contraindicated in patients with hepatic failure?
+# Expected: atorvastatin, diazepam, imatinib, metformin, omeprazole, sildenafil
+# Type: SELECT
+# Note: a disease -> drugs lookup through the reified :Contraindication association.
+PREFIX :     <https://itb.ac.id/a5103/tubes_2#>
+PREFIX res:  <https://itb.ac.id/a5103/tubes_2/resource/>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX xsd:  <http://www.w3.org/2001/XMLSchema#>
+
+SELECT DISTINCT ?drug ?drugName
+WHERE {
+  ?disease a :Disease ;
+           rdfs:label ?diseaseName .
+  FILTER (LCASE(STR(?diseaseName)) = "hepatic failure")
+  ?assoc a :Contraindication ;
+         :forDisease ?disease .
+  ?drug :hasAssociation ?assoc ;
+        rdfs:label ?drugName .
+}
+ORDER BY ?drugName
+
+RESULT
+----------------------------------------------------------------------------------------------------
+drug          | drugName
+--------------+-------------
+res:drug_257  | atorvastatin
+res:drug_852  | diazepam
+res:drug_1423 | imatinib
+res:drug_1725 | metformin
+res:drug_1990 | omeprazole
+res:drug_2441 | sildenafil
+
+(6 row(s))
+
+====================================================================================================
+CQ12_DIAZEPAM_TOP_SIGNALS  [SELECT]
+Apa saja tiga sinyal efek samping terkuat (skor LLR tertinggi) yang dilaporkan untuk diazepam?
+====================================================================================================
+
+QUERY
+----------------------------------------------------------------------------------------------------
+# CQ12: Apa saja tiga sinyal efek samping terkuat (skor LLR tertinggi) yang dilaporkan untuk diazepam?
+# EN:   What are the three strongest adverse-event signals (highest FAERS LLR score) reported for diazepam?
+# Expected: Drug abuse (10918.615), Toxicity to various agents (9655.77), Completed suicide (3684.357)
+# Type: SELECT
+# Note: ranking with ORDER BY DESC + LIMIT.
+PREFIX :     <https://itb.ac.id/a5103/tubes_2#>
+PREFIX res:  <https://itb.ac.id/a5103/tubes_2/resource/>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX xsd:  <http://www.w3.org/2001/XMLSchema#>
+
+SELECT ?adverseEvent ?eventName ?llr
+WHERE {
+  ?drug a :Drug ;
+        rdfs:label ?drugName ;
+        :hasAdverseSignal ?signal .
+  FILTER (LCASE(STR(?drugName)) = "diazepam")
+  ?signal :reportsEvent ?adverseEvent ;
+          :llrScore ?llr .
+  ?adverseEvent rdfs:label ?eventName .
+}
+ORDER BY DESC(?llr)
+LIMIT 3
+
+RESULT
+----------------------------------------------------------------------------------------------------
+adverseEvent    | eventName                  | llr
+----------------+----------------------------+----------
+res:ae_10013654 | Drug abuse                 | 10918.615
+res:ae_10070863 | Toxicity to various agents | 9655.77
+res:ae_10010144 | Completed suicide          | 3684.357
+
+(3 row(s))
+
+====================================================================================================
+CQ13_FDA_BEFORE_1990  [SELECT]
+Obat apa saja yang disetujui oleh FDA sebelum tahun 1990, beserta tanggal persetujuannya?
+====================================================================================================
+
+QUERY
+----------------------------------------------------------------------------------------------------
+# CQ13: Obat apa saja yang disetujui oleh FDA sebelum tahun 1990, beserta tanggal persetujuannya?
+# EN:   Which drugs were approved by the FDA before 1990, and on which dates?
+# Expected: chloroquine (1949-10-31), diazepam (1963-11-15), ciprofloxacin (1987-10-22), omeprazole (1989-09-14)
+# Type: SELECT
+# Note: :approvalDate is stored as an xsd:string in ISO "YYYY-MM-DD" form, which sorts chronologically,
+#       so a string comparison is used (portable: rdflib cannot cast strings to xsd:date).
+PREFIX :     <https://itb.ac.id/a5103/tubes_2#>
+PREFIX res:  <https://itb.ac.id/a5103/tubes_2/resource/>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX xsd:  <http://www.w3.org/2001/XMLSchema#>
+
+SELECT ?drugName ?approvalDate
+WHERE {
+  ?drug a :Drug ;
+        rdfs:label ?drugName ;
+        :hasApproval ?approval .
+  ?approval :approvedBy ?agency ;
+            :approvalDate ?approvalDate .
+  ?agency rdfs:label ?agencyName .
+  FILTER (STR(?agencyName) = "FDA")
+  FILTER (STR(?approvalDate) < "1990-01-01")
+}
+ORDER BY ?approvalDate
+
+RESULT
+----------------------------------------------------------------------------------------------------
+drugName      | approvalDate
+--------------+-------------
+chloroquine   | 1949-10-31
+diazepam      | 1963-11-15
+ciprofloxacin | 1987-10-22
+omeprazole    | 1989-09-14
+
+(4 row(s))
+
+====================================================================================================
+CQ14_SMALL_MOLECULES_LIPINSKI  [SELECT]
+Obat molekul kecil apa saja yang memenuhi kriteria berat molekul aturan Lipinski (< 500 Da), beserta berat molekulnya?
+====================================================================================================
+
+QUERY
+----------------------------------------------------------------------------------------------------
+# CQ14: Obat molekul kecil apa saja yang memenuhi kriteria berat molekul aturan Lipinski (< 500 Da),
+#       beserta berat molekulnya?
+# EN:   Which small-molecule drugs meet Lipinski's molecular-weight criterion (< 500 Da), and what do they weigh?
+# Expected: metformin, diazepam, chloroquine, ciprofloxacin, omeprazole, losartan, sildenafil, imatinib
+#           (atorvastatin, 558.65 Da, fails; trastuzumab is not a small molecule)
+# Type: SELECT
+# Note: equivalent to the defined class :SmallMoleculeDrug (some :smiles) plus a numeric filter.
+PREFIX :     <https://itb.ac.id/a5103/tubes_2#>
+PREFIX res:  <https://itb.ac.id/a5103/tubes_2/resource/>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX xsd:  <http://www.w3.org/2001/XMLSchema#>
+
+SELECT ?drugName ?molecularWeight
+WHERE {
+  ?drug a :Drug ;
+        rdfs:label ?drugName ;
+        :smiles ?smiles ;
+        :molecularWeight ?molecularWeight .
+  FILTER (?molecularWeight < 500.0)
+}
+ORDER BY ?molecularWeight
+
+RESULT
+----------------------------------------------------------------------------------------------------
+drugName      | molecularWeight
+--------------+----------------
+metformin     | 129.167
+diazepam      | 284.74
+chloroquine   | 319.88
+ciprofloxacin | 331.347
+omeprazole    | 345.42
+losartan      | 422.92
+sildenafil    | 474.58
+imatinib      | 493.615
+
+(8 row(s))
+
+====================================================================================================
+CQ15_HIGH_RISK_DRUGS  [SELECT]
+Obat berizin dengan risiko keamanan tinggi apa saja yang terdapat dalam knowledge graph, beserta jumlah kontraindikasi dan skor LLR tertingginya?
+====================================================================================================
+
+QUERY
+----------------------------------------------------------------------------------------------------
+# CQ15: Obat berizin dengan risiko keamanan tinggi apa saja yang terdapat dalam knowledge graph, beserta
+#       jumlah kontraindikasi dan skor LLR tertingginya?
+# EN:   Which high-risk approved drugs are in the knowledge graph, with their number of contraindications and
+#       highest LLR score?
+# Expected: 9 drugs (all except trastuzumab), led by metformin (6 contraindications, max LLR 44808.792)
+# Type: SELECT
+# Note: lists all members of the defined class :HighRiskApprovedDrug (approval + contraindication + strong
+#       adverse signal with LLR >= 100), written out so it works with or without an OWL reasoner.
+PREFIX :     <https://itb.ac.id/a5103/tubes_2#>
+PREFIX res:  <https://itb.ac.id/a5103/tubes_2/resource/>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX xsd:  <http://www.w3.org/2001/XMLSchema#>
+
+SELECT ?drugName
+       (COUNT(DISTINCT ?contra) AS ?contraindications)
+       (MAX(?llr)               AS ?maxLLR)
+WHERE {
+  ?drug a :Drug ;
+        rdfs:label ?drugName ;
+        :hasApproval ?approval ;
+        :hasAssociation ?contra ;
+        :hasAdverseSignal ?signal .
+  ?approval a :RegulatoryApproval .
+  ?contra a :Contraindication .
+  ?signal :llrScore ?llr .
+  FILTER (?llr >= 100.0)
+}
+GROUP BY ?drugName
+ORDER BY DESC(?maxLLR)
+
+RESULT
+----------------------------------------------------------------------------------------------------
+drugName      | contraindications | maxLLR
+--------------+-------------------+----------
+metformin     | 6                 | 44808.792
+diazepam      | 4                 | 10918.615
+imatinib      | 6                 | 5981.245
+atorvastatin  | 4                 | 4620.818
+sildenafil    | 5                 | 4422.233
+omeprazole    | 3                 | 3186.151
+ciprofloxacin | 3                 | 1998.565
+losartan      | 4                 | 827.779
+chloroquine   | 3                 | 179.042
+
+(9 row(s))
+
+====================================================================================================
+U1_INSERT  [INSERT]
+Insert a new drug (empagliflozin) together with its FDA regulatory approval, i.e. instances of two connected classes (:Drug -:hasApproval-> :RegulatoryApproval) in one operation.
+====================================================================================================
+
+QUERY
+----------------------------------------------------------------------------------------------------
+# U1: Insert a new drug (empagliflozin) together with its FDA regulatory approval,
+#     i.e. instances of two connected classes (:Drug -:hasApproval-> :RegulatoryApproval) in one operation.
+# Type: INSERT
+PREFIX :     <https://itb.ac.id/a5103/tubes_2#>
+PREFIX res:  <https://itb.ac.id/a5103/tubes_2/resource/>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX xsd:  <http://www.w3.org/2001/XMLSchema#>
+PREFIX owl:  <http://www.w3.org/2002/07/owl#>
+
+INSERT DATA {
+  res:drug_empagliflozin a owl:NamedIndividual , :Drug ;
+      rdfs:label "empagliflozin"@en ;
+      :molecularWeight "450.91"^^xsd:double ;
+      :hasApproval res:approval_EMPAGLIFLOZIN_FDA .
+
+  res:approval_EMPAGLIFLOZIN_FDA a owl:NamedIndividual , :RegulatoryApproval ;
+      :approvedBy res:agency_fda ;
+      :approvalDate "2014-08-01" .
+}
+
+RESULT (run on an in-memory copy of the KG; the shared KG is not modified)
+----------------------------------------------------------------------------------------------------
+Verification query:
+PREFIX :     <https://itb.ac.id/a5103/tubes_2#>
+PREFIX res:  <https://itb.ac.id/a5103/tubes_2/resource/>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+SELECT ?drug ?drugName ?approval ?agencyName ?approvalDate
+WHERE {
+  ?drug rdfs:label ?drugName ;
+        :hasApproval ?approval .
+  FILTER (LCASE(STR(?drugName)) = "empagliflozin")
+  ?approval :approvedBy/rdfs:label ?agencyName ;
+            :approvalDate ?approvalDate .
+}
+
+BEFORE the update:
+(no results)
+
+(0 row(s))
+
+AFTER the update:
+drug                   | drugName      | approval                       | agencyName | approvalDate
+-----------------------+---------------+--------------------------------+------------+-------------
+res:drug_empagliflozin | empagliflozin | res:approval_EMPAGLIFLOZIN_FDA | FDA        | 2014-08-01
+
+(1 row(s))
+
+Triple count: 1671 -> 1680 (+9)
+
+====================================================================================================
+U2_DELETE  [DELETE]
+Delete every adverse signal that is NOT a strong signal (LLR score < 100), together with the link from its drug, i.e. delete instances of :AdverseSignal selected by a FILTER condition.
+====================================================================================================
+
+QUERY
+----------------------------------------------------------------------------------------------------
+# U2: Delete every adverse signal that is NOT a strong signal (LLR score < 100), together with the
+#     link from its drug, i.e. delete instances of :AdverseSignal selected by a FILTER condition.
+# Type: DELETE
+PREFIX :     <https://itb.ac.id/a5103/tubes_2#>
+PREFIX res:  <https://itb.ac.id/a5103/tubes_2/resource/>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX xsd:  <http://www.w3.org/2001/XMLSchema#>
+
+DELETE {
+  ?signal ?p ?o .
+  ?drug :hasAdverseSignal ?signal .
+}
+WHERE {
+  ?signal a :AdverseSignal ;
+          :llrScore ?llr ;
+          ?p ?o .
+  ?drug :hasAdverseSignal ?signal .
+  FILTER (?llr < 100.0)
+}
+
+RESULT (run on an in-memory copy of the KG; the shared KG is not modified)
+----------------------------------------------------------------------------------------------------
+Verification query:
+PREFIX :     <https://itb.ac.id/a5103/tubes_2#>
+PREFIX res:  <https://itb.ac.id/a5103/tubes_2/resource/>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+SELECT ?signal ?drugName ?eventName ?llr
+WHERE {
+  ?signal a :AdverseSignal ;
+          :llrScore ?llr ;
+          :reportsEvent/rdfs:label ?eventName .
+  ?drug :hasAdverseSignal ?signal ;
+        rdfs:label ?drugName .
+  FILTER (?llr < 100.0)
+}
+ORDER BY ?llr
+
+BEFORE the update:
+signal               | drugName    | eventName            | llr
+---------------------+-------------+----------------------+-------
+res:signal_SIG029116 | chloroquine | Arthritis            | 88.408
+res:signal_SIG029117 | chloroquine | Basal cell carcinoma | 89.789
+
+(2 row(s))
+
+AFTER the update:
+(no results)
+
+(0 row(s))
+
+Triple count: 1680 -> 1670 (-10)
+
+====================================================================================================
+U3_DESCRIBE  [DESCRIBE]
+Describe one specific resource: the drug metformin (res:drug_1725).
+====================================================================================================
+
+QUERY
+----------------------------------------------------------------------------------------------------
+# U3: Describe one specific resource: the drug metformin (res:drug_1725).
+# Type: DESCRIBE
+PREFIX :     <https://itb.ac.id/a5103/tubes_2#>
+PREFIX res:  <https://itb.ac.id/a5103/tubes_2/resource/>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX xsd:  <http://www.w3.org/2001/XMLSchema#>
+
+DESCRIBE res:drug_1725
+
+RESULT
+----------------------------------------------------------------------------------------------------
+@prefix : <https://itb.ac.id/a5103/tubes_2#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix res: <https://itb.ac.id/a5103/tubes_2/resource/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+res:drug_1725 a owl:NamedIndividual,
+        :Drug ;
+    rdfs:label "metformin"@en ;
+    :hasAdverseSignal res:signal_SIG005028,
+        res:signal_SIG005030,
+        res:signal_SIG005037 ;
+    :hasApproval res:approval_APR000445,
+        res:approval_APR000446,
+        res:approval_APR000447 ;
+    :hasAssociation res:assoc_ASSOC008779,
+        res:assoc_ASSOC008780,
+        res:assoc_ASSOC008781,
+        res:assoc_ASSOC008782,
+        res:assoc_ASSOC008788,
+        res:assoc_ASSOC008800,
+        res:assoc_ASSOC008805,
+        res:assoc_ASSOC008809,
+        res:assoc_ASSOC008817,
+        res:assoc_ASSOC008825,
+        res:assoc_ASSOC008841,
+        res:assoc_ASSOC008844 ;
+    :molecularWeight "129.167"^^xsd:double ;
+    :smiles "CN(C)C(=N)NC(N)=N" ;
+    :targets res:target_2815 .
+
+(24 triple(s))

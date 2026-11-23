@@ -1,0 +1,39 @@
+====================================================================================================
+CQ12_DIAZEPAM_TOP_SIGNALS  [SELECT]
+Apa saja tiga sinyal efek samping terkuat (skor LLR tertinggi) yang dilaporkan untuk diazepam?
+====================================================================================================
+
+QUERY
+----------------------------------------------------------------------------------------------------
+# CQ12: Apa saja tiga sinyal efek samping terkuat (skor LLR tertinggi) yang dilaporkan untuk diazepam?
+# EN:   What are the three strongest adverse-event signals (highest FAERS LLR score) reported for diazepam?
+# Expected: Drug abuse (10918.615), Toxicity to various agents (9655.77), Completed suicide (3684.357)
+# Type: SELECT
+# Note: ranking with ORDER BY DESC + LIMIT.
+PREFIX :     <https://itb.ac.id/a5103/tubes_2#>
+PREFIX res:  <https://itb.ac.id/a5103/tubes_2/resource/>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX xsd:  <http://www.w3.org/2001/XMLSchema#>
+
+SELECT ?adverseEvent ?eventName ?llr
+WHERE {
+  ?drug a :Drug ;
+        rdfs:label ?drugName ;
+        :hasAdverseSignal ?signal .
+  FILTER (LCASE(STR(?drugName)) = "diazepam")
+  ?signal :reportsEvent ?adverseEvent ;
+          :llrScore ?llr .
+  ?adverseEvent rdfs:label ?eventName .
+}
+ORDER BY DESC(?llr)
+LIMIT 3
+
+RESULT
+----------------------------------------------------------------------------------------------------
+adverseEvent    | eventName                  | llr
+----------------+----------------------------+----------
+res:ae_10013654 | Drug abuse                 | 10918.615
+res:ae_10070863 | Toxicity to various agents | 9655.77
+res:ae_10010144 | Completed suicide          | 3684.357
+
+(3 row(s))

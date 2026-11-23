@@ -1,0 +1,47 @@
+====================================================================================================
+CQ07_HYPERCHOLESTEROLEMIA_MYALGIA  [SELECT]
+Seorang pasien Hypercholesterolemia memiliki riwayat Disorder of muscle. Obat berizin dengan risiko keamanan tinggi apa saja yang diindikasikan untuk kondisi pertama, dikontraindikasikan pada kondisi kedua, dan memiliki sinyal efek samping kuat berupa Myalgia?
+====================================================================================================
+
+QUERY
+----------------------------------------------------------------------------------------------------
+# CQ07: Seorang pasien Hypercholesterolemia memiliki riwayat Disorder of muscle. Obat berizin dengan risiko
+#       keamanan tinggi apa saja yang diindikasikan untuk kondisi pertama, dikontraindikasikan pada kondisi
+#       kedua, dan memiliki sinyal efek samping kuat berupa Myalgia?
+# EN:   Which high-risk approved drugs are indicated for hypercholesterolemia, contraindicated in disorder of
+#       muscle, and have a strong adverse signal for myalgia?
+# Expected: atorvastatin (Myalgia, LLR = 4620.818)
+# Type: SELECT
+# Note: the contraindication plus the strong Myalgia signal already make the approved drug a
+#       :HighRiskApprovedDrug.
+PREFIX :     <https://itb.ac.id/a5103/tubes_2#>
+PREFIX res:  <https://itb.ac.id/a5103/tubes_2/resource/>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX xsd:  <http://www.w3.org/2001/XMLSchema#>
+
+SELECT DISTINCT ?drugName ?eventName ?llr
+WHERE {
+  ?drug a :Drug ;
+        rdfs:label ?drugName ;
+        :hasApproval ?approval ;
+        :hasAssociation ?ind , ?ci ;
+        :hasAdverseSignal ?signal .
+  ?ind a :Indication ;
+       :forDisease/rdfs:label ?indDisease .
+  FILTER (LCASE(STR(?indDisease)) = "hypercholesterolemia")
+  ?ci a :Contraindication ;
+      :forDisease/rdfs:label ?ciDisease .
+  FILTER (LCASE(STR(?ciDisease)) = "disorder of muscle")
+  ?signal :reportsEvent/rdfs:label ?eventName ;
+          :llrScore ?llr .
+  FILTER (LCASE(STR(?eventName)) = "myalgia" && ?llr >= 100.0)
+}
+ORDER BY DESC(?llr)
+
+RESULT
+----------------------------------------------------------------------------------------------------
+drugName     | eventName | llr
+-------------+-----------+---------
+atorvastatin | Myalgia   | 4620.818
+
+(1 row(s))

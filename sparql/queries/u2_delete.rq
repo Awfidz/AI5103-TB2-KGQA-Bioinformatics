@@ -1,0 +1,19 @@
+# U2: Delete every adverse signal that is NOT a strong signal (LLR score < 100), together with the
+#     link from its drug, i.e. delete instances of :AdverseSignal selected by a FILTER condition.
+# Type: DELETE
+PREFIX :     <https://itb.ac.id/a5103/tubes_2#>
+PREFIX res:  <https://itb.ac.id/a5103/tubes_2/resource/>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX xsd:  <http://www.w3.org/2001/XMLSchema#>
+
+DELETE {
+  ?signal ?p ?o .
+  ?drug :hasAdverseSignal ?signal .
+}
+WHERE {
+  ?signal a :AdverseSignal ;
+          :llrScore ?llr ;
+          ?p ?o .
+  ?drug :hasAdverseSignal ?signal .
+  FILTER (?llr < 100.0)
+}

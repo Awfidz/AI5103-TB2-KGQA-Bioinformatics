@@ -1,0 +1,25 @@
+# CQ09: Jalur biologis manusia (Reactome) apa saja yang dipengaruhi oleh mekanisme kerja imatinib?
+# EN:   Which human Reactome pathways are affected by imatinib's mechanism of action?
+# Expected: Signaling by PDGF, Signaling by SCF-KIT, PIP3 activates AKT signaling, Regulation of KIT signaling,
+#           Role of ABL in ROBO-SLIT signaling, Downstream signal transduction, Myogenesis,
+#           Regulation of actin dynamics for phagocytic cup formation
+# Type: CONSTRUCT
+# Note: materialises the property chain :affectsPathway = :targets o :hasComponent o :participatesIn
+#       with a SPARQL property path, so no OWL reasoner is needed.
+PREFIX :     <https://itb.ac.id/a5103/tubes_2#>
+PREFIX res:  <https://itb.ac.id/a5103/tubes_2/resource/>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX xsd:  <http://www.w3.org/2001/XMLSchema#>
+
+CONSTRUCT {
+  ?drug :affectsPathway ?pathway ;
+        rdfs:label ?drugName .
+  ?pathway rdfs:label ?pathwayName .
+}
+WHERE {
+  ?drug a :Drug ;
+        rdfs:label ?drugName .
+  FILTER (LCASE(STR(?drugName)) = "imatinib")
+  ?drug :targets/:hasComponent/:participatesIn ?pathway .
+  ?pathway rdfs:label ?pathwayName .
+}

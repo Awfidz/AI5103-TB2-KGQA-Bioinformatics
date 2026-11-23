@@ -1,0 +1,58 @@
+====================================================================================================
+U2_DELETE  [DELETE]
+Delete every adverse signal that is NOT a strong signal (LLR score < 100), together with the link from its drug, i.e. delete instances of :AdverseSignal selected by a FILTER condition.
+====================================================================================================
+
+QUERY
+----------------------------------------------------------------------------------------------------
+# U2: Delete every adverse signal that is NOT a strong signal (LLR score < 100), together with the
+#     link from its drug, i.e. delete instances of :AdverseSignal selected by a FILTER condition.
+# Type: DELETE
+PREFIX :     <https://itb.ac.id/a5103/tubes_2#>
+PREFIX res:  <https://itb.ac.id/a5103/tubes_2/resource/>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX xsd:  <http://www.w3.org/2001/XMLSchema#>
+
+DELETE {
+  ?signal ?p ?o .
+  ?drug :hasAdverseSignal ?signal .
+}
+WHERE {
+  ?signal a :AdverseSignal ;
+          :llrScore ?llr ;
+          ?p ?o .
+  ?drug :hasAdverseSignal ?signal .
+  FILTER (?llr < 100.0)
+}
+
+RESULT (run on an in-memory copy of the KG; the shared KG is not modified)
+----------------------------------------------------------------------------------------------------
+Verification query:
+PREFIX :     <https://itb.ac.id/a5103/tubes_2#>
+PREFIX res:  <https://itb.ac.id/a5103/tubes_2/resource/>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+SELECT ?signal ?drugName ?eventName ?llr
+WHERE {
+  ?signal a :AdverseSignal ;
+          :llrScore ?llr ;
+          :reportsEvent/rdfs:label ?eventName .
+  ?drug :hasAdverseSignal ?signal ;
+        rdfs:label ?drugName .
+  FILTER (?llr < 100.0)
+}
+ORDER BY ?llr
+
+BEFORE the update:
+signal               | drugName    | eventName            | llr
+---------------------+-------------+----------------------+-------
+res:signal_SIG029116 | chloroquine | Arthritis            | 88.408
+res:signal_SIG029117 | chloroquine | Basal cell carcinoma | 89.789
+
+(2 row(s))
+
+AFTER the update:
+(no results)
+
+(0 row(s))
+
+Triple count: 1680 -> 1670 (-10)

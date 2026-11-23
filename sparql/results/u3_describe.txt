@@ -1,0 +1,50 @@
+====================================================================================================
+U3_DESCRIBE  [DESCRIBE]
+Describe one specific resource: the drug metformin (res:drug_1725).
+====================================================================================================
+
+QUERY
+----------------------------------------------------------------------------------------------------
+# U3: Describe one specific resource: the drug metformin (res:drug_1725).
+# Type: DESCRIBE
+PREFIX :     <https://itb.ac.id/a5103/tubes_2#>
+PREFIX res:  <https://itb.ac.id/a5103/tubes_2/resource/>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX xsd:  <http://www.w3.org/2001/XMLSchema#>
+
+DESCRIBE res:drug_1725
+
+RESULT
+----------------------------------------------------------------------------------------------------
+@prefix : <https://itb.ac.id/a5103/tubes_2#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix res: <https://itb.ac.id/a5103/tubes_2/resource/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+res:drug_1725 a owl:NamedIndividual,
+        :Drug ;
+    rdfs:label "metformin"@en ;
+    :hasAdverseSignal res:signal_SIG005028,
+        res:signal_SIG005030,
+        res:signal_SIG005037 ;
+    :hasApproval res:approval_APR000445,
+        res:approval_APR000446,
+        res:approval_APR000447 ;
+    :hasAssociation res:assoc_ASSOC008779,
+        res:assoc_ASSOC008780,
+        res:assoc_ASSOC008781,
+        res:assoc_ASSOC008782,
+        res:assoc_ASSOC008788,
+        res:assoc_ASSOC008800,
+        res:assoc_ASSOC008805,
+        res:assoc_ASSOC008809,
+        res:assoc_ASSOC008817,
+        res:assoc_ASSOC008825,
+        res:assoc_ASSOC008841,
+        res:assoc_ASSOC008844 ;
+    :molecularWeight "129.167"^^xsd:double ;
+    :smiles "CN(C)C(=N)NC(N)=N" ;
+    :targets res:target_2815 .
+
+(24 triple(s))

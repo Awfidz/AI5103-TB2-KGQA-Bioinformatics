@@ -1,0 +1,57 @@
+====================================================================================================
+CQ04_CIPROFLOXACIN_CHECK  [SELECT]
+Seorang pasien Typhoid fever dengan riwayat Epilepsy dipertimbangkan diberi ciprofloxacin. Apakah ciprofloxacin diindikasikan resmi untuk Typhoid fever, tetapi dikontraindikasikan pada Epilepsy serta memiliki sinyal efek samping kuat (LLR >= 100) berupa Tendon pain?
+====================================================================================================
+
+QUERY
+----------------------------------------------------------------------------------------------------
+# CQ04: Seorang pasien Typhoid fever dengan riwayat Epilepsy dipertimbangkan diberi ciprofloxacin. Apakah
+#       ciprofloxacin diindikasikan resmi untuk Typhoid fever, tetapi dikontraindikasikan pada Epilepsy serta
+#       memiliki sinyal efek samping kuat (LLR >= 100) berupa Tendon pain?
+# EN:   Is ciprofloxacin indicated for typhoid fever, contraindicated in epilepsy, and does it have a strong
+#       adverse signal (LLR >= 100) for tendon pain?
+# Expected: True (Tendon pain, LLR = 1554.115)
+# Type: SELECT (yes/no question, with the supporting LLR value)
+PREFIX :     <https://itb.ac.id/a5103/tubes_2#>
+PREFIX res:  <https://itb.ac.id/a5103/tubes_2/resource/>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX xsd:  <http://www.w3.org/2001/XMLSchema#>
+
+SELECT ?drugName ?indicatedForTyphoid ?contraindicatedInEpilepsy ?tendonPainLLR ?strongTendonPainSignal ?answer
+WHERE {
+  ?drug a :Drug ;
+        rdfs:label ?drugName .
+  FILTER (LCASE(STR(?drugName)) = "ciprofloxacin")
+
+  BIND (EXISTS {
+    ?drug :hasAssociation ?ind .
+    ?ind a :Indication ;
+         :forDisease/rdfs:label ?indDisease .
+    FILTER (LCASE(STR(?indDisease)) = "typhoid fever")
+  } AS ?indicatedForTyphoid)
+
+  BIND (EXISTS {
+    ?drug :hasAssociation ?ci .
+    ?ci a :Contraindication ;
+        :forDisease/rdfs:label ?ciDisease .
+    FILTER (LCASE(STR(?ciDisease)) = "epilepsy")
+  } AS ?contraindicatedInEpilepsy)
+
+  OPTIONAL {
+    ?drug :hasAdverseSignal ?signal .
+    ?signal :reportsEvent/rdfs:label ?eventName ;
+            :llrScore ?tendonPainLLR .
+    FILTER (LCASE(STR(?eventName)) = "tendon pain")
+  }
+  BIND (COALESCE(?tendonPainLLR >= 100.0, false) AS ?strongTendonPainSignal)
+
+  BIND (?indicatedForTyphoid && ?contraindicatedInEpilepsy && ?strongTendonPainSignal AS ?answer)
+}
+
+RESULT
+----------------------------------------------------------------------------------------------------
+drugName      | indicatedForTyphoid | contraindicatedInEpilepsy | tendonPainLLR | strongTendonPainSignal | answer
+--------------+---------------------+---------------------------+---------------+------------------------+-------
+ciprofloxacin | true                | true                      | 1554.115      | true                   | true
+
+(1 row(s))

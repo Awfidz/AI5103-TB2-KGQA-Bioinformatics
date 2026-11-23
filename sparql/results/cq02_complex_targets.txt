@@ -1,0 +1,47 @@
+====================================================================================================
+CQ02_COMPLEX_TARGETS  [SELECT]
+Target biologis berupa kompleks multi-protein apa saja yang ditargetkan oleh diazepam atau omeprazole, beserta pengenal UniProt protein penyusunnya?
+====================================================================================================
+
+QUERY
+----------------------------------------------------------------------------------------------------
+# CQ02: Target biologis berupa kompleks multi-protein apa saja yang ditargetkan oleh diazepam atau omeprazole,
+#       beserta pengenal UniProt protein penyusunnya?
+# EN:   Which multi-protein complex targets are targeted by diazepam or omeprazole, and what are the UniProt
+#       accessions of their component proteins?
+# Expected: the three GABA-A receptor subtypes (diazepam); Potassium-transporting ATPase, P20648 + P51164 (omeprazole)
+# Type: SELECT
+# Note: a protein complex target is the defined class :ProteinComplexTarget (>= 2 :hasComponent proteins),
+#       expressed with GROUP BY / HAVING so no reasoner is needed.
+PREFIX :     <https://itb.ac.id/a5103/tubes_2#>
+PREFIX res:  <https://itb.ac.id/a5103/tubes_2/resource/>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX xsd:  <http://www.w3.org/2001/XMLSchema#>
+
+SELECT ?drugName ?targetName
+       (COUNT(DISTINCT ?protein) AS ?subunits)
+       (GROUP_CONCAT(DISTINCT ?accession; separator=", ") AS ?uniprotAccessions)
+WHERE {
+  ?drug a :Drug ;
+        rdfs:label ?drugName ;
+        :targets ?target .
+  FILTER (LCASE(STR(?drugName)) IN ("diazepam", "omeprazole"))
+  ?target a :Target ;
+          rdfs:label ?targetName ;
+          :hasComponent ?protein .
+  ?protein :uniprotAccession ?accession .
+}
+GROUP BY ?drugName ?targetName
+HAVING (COUNT(DISTINCT ?protein) >= 2)
+ORDER BY ?drugName ?targetName
+
+RESULT
+----------------------------------------------------------------------------------------------------
+drugName   | targetName                             | subunits | uniprotAccessions
+-----------+----------------------------------------+----------+-----------------------
+diazepam   | GABA-A receptor alpha-1/beta-2/gamma-2 | 3        | P14867, P18507, P47870
+diazepam   | GABA-A receptor alpha-2/beta-3/gamma-2 | 3        | P18507, P28472, P47869
+diazepam   | GABA-A receptor alpha-3/beta-3/gamma-2 | 3        | P18507, P28472, P34903
+omeprazole | Potassium-transporting ATPase          | 2        | P20648, P51164
+
+(4 row(s))

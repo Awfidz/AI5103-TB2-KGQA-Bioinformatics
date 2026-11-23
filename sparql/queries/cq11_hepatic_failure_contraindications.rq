@@ -1,0 +1,21 @@
+# CQ11: Obat apa saja yang dikontraindikasikan pada pasien dengan Hepatic failure?
+# EN:   Which drugs are contraindicated in patients with hepatic failure?
+# Expected: atorvastatin, diazepam, imatinib, metformin, omeprazole, sildenafil
+# Type: SELECT
+# Note: a disease -> drugs lookup through the reified :Contraindication association.
+PREFIX :     <https://itb.ac.id/a5103/tubes_2#>
+PREFIX res:  <https://itb.ac.id/a5103/tubes_2/resource/>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX xsd:  <http://www.w3.org/2001/XMLSchema#>
+
+SELECT DISTINCT ?drug ?drugName
+WHERE {
+  ?disease a :Disease ;
+           rdfs:label ?diseaseName .
+  FILTER (LCASE(STR(?diseaseName)) = "hepatic failure")
+  ?assoc a :Contraindication ;
+         :forDisease ?disease .
+  ?drug :hasAssociation ?assoc ;
+        rdfs:label ?drugName .
+}
+ORDER BY ?drugName

@@ -1,0 +1,104 @@
+====================================================================================================
+CQ10_CHLOROQUINE_SAFETY_PROFILE  [CONSTRUCT]
+Bagaimana profil keamanan lengkap chloroquine (status risiko, status alih fungsi, kontraindikasi pada Deficiency of glucose-6-phosphate dehydrogenase, serta daftar sinyal efek samping kuatnya) untuk audit terapi pasien Falciparum malaria?
+====================================================================================================
+
+QUERY
+----------------------------------------------------------------------------------------------------
+# CQ10: Bagaimana profil keamanan lengkap chloroquine (status risiko, status alih fungsi, kontraindikasi pada
+#       Deficiency of glucose-6-phosphate dehydrogenase, serta daftar sinyal efek samping kuatnya) untuk audit
+#       terapi pasien Falciparum malaria?
+# EN:   What is chloroquine's full safety profile: risk status, repurposing status, contraindication in G6PD
+#       deficiency, and its strong adverse signals?
+# Expected: RDF subgraph with HighRiskApprovedDrug and RepurposedApprovedDrug status, the G6PD contraindication
+#           and 3 strong signals (Treatment failure, Off label use, Hepatitis); the 2 weak signals (< 100) are left out
+# Type: CONSTRUCT
+# Note: the two defined-class memberships are computed with EXISTS and only asserted when they hold
+#       (an unbound ?riskClass / ?repurposedClass drops that triple from the template).
+PREFIX :     <https://itb.ac.id/a5103/tubes_2#>
+PREFIX res:  <https://itb.ac.id/a5103/tubes_2/resource/>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX xsd:  <http://www.w3.org/2001/XMLSchema#>
+
+CONSTRUCT {
+  ?drug a ?riskClass , ?repurposedClass ;
+        rdfs:label ?drugName ;
+        :hasAssociation ?ci ;
+        :hasAdverseSignal ?signal .
+  ?ci a :Contraindication ;
+      :forDisease ?ciDisease .
+  ?ciDisease rdfs:label ?ciDiseaseName .
+  ?signal a :StrongAdverseSignal ;
+          :reportsEvent ?event ;
+          :llrScore ?llr .
+  ?event rdfs:label ?eventName .
+}
+WHERE {
+  ?drug a :Drug ;
+        rdfs:label ?drugName .
+  FILTER (LCASE(STR(?drugName)) = "chloroquine")
+
+  BIND (EXISTS { ?drug :hasApproval ?ap } AS ?approved)
+  BIND (EXISTS { ?drug :hasAssociation ?c0 . ?c0 a :Contraindication } AS ?hasCi)
+  BIND (EXISTS { ?drug :hasAdverseSignal ?s0 . ?s0 :llrScore ?l0 . FILTER (?l0 >= 100.0) } AS ?hasStrong)
+  BIND (EXISTS { ?drug :hasAssociation ?i0 . ?i0 a :Indication } AS ?hasInd)
+  BIND (EXISTS { ?drug :hasAssociation ?o0 . ?o0 a :OffLabelUse } AS ?hasOff)
+  BIND (IF(?approved && ?hasCi && ?hasStrong, :HighRiskApprovedDrug, ?unbound) AS ?riskClass)
+  BIND (IF(?approved && ?hasInd && ?hasOff, :RepurposedApprovedDrug, ?unbound) AS ?repurposedClass)
+
+  {
+    ?drug :hasAssociation ?ci .
+    ?ci a :Contraindication ;
+        :forDisease ?ciDisease .
+    ?ciDisease rdfs:label ?ciDiseaseName .
+    FILTER (LCASE(STR(?ciDiseaseName)) = "deficiency of glucose-6-phosphate dehydrogenase")
+  }
+  UNION
+  {
+    ?drug :hasAdverseSignal ?signal .
+    ?signal :reportsEvent ?event ;
+            :llrScore ?llr .
+    ?event rdfs:label ?eventName .
+    FILTER (?llr >= 100.0)
+  }
+}
+
+RESULT
+----------------------------------------------------------------------------------------------------
+@prefix : <https://itb.ac.id/a5103/tubes_2#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix res: <https://itb.ac.id/a5103/tubes_2/resource/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+res:drug_607 a :HighRiskApprovedDrug,
+        :RepurposedApprovedDrug ;
+    rdfs:label "chloroquine"@en ;
+    :hasAdverseSignal res:signal_SIG029122,
+        res:signal_SIG029131,
+        res:signal_SIG029135 ;
+    :hasAssociation res:assoc_ASSOC037178 .
+
+res:ae_10019717 rdfs:label "Hepatitis"@en .
+
+res:ae_10053762 rdfs:label "Off label use"@en .
+
+res:ae_10066901 rdfs:label "Treatment failure"@en .
+
+res:assoc_ASSOC037178 a :Contraindication ;
+    :forDisease res:disease_21000697 .
+
+res:disease_21000697 rdfs:label "Deficiency of glucose-6-phosphate dehydrogenase"@en .
+
+res:signal_SIG029122 a :StrongAdverseSignal ;
+    :llrScore "148.83"^^xsd:double ;
+    :reportsEvent res:ae_10019717 .
+
+res:signal_SIG029131 a :StrongAdverseSignal ;
+    :llrScore "161.291"^^xsd:double ;
+    :reportsEvent res:ae_10053762 .
+
+res:signal_SIG029135 a :StrongAdverseSignal ;
+    :llrScore "179.042"^^xsd:double ;
+    :reportsEvent res:ae_10066901 .
+
+(22 triple(s))

@@ -1,0 +1,66 @@
+====================================================================================================
+CQ09_IMATINIB_PATHWAYS  [CONSTRUCT]
+Jalur biologis manusia (Reactome) apa saja yang dipengaruhi oleh mekanisme kerja imatinib?
+====================================================================================================
+
+QUERY
+----------------------------------------------------------------------------------------------------
+# CQ09: Jalur biologis manusia (Reactome) apa saja yang dipengaruhi oleh mekanisme kerja imatinib?
+# EN:   Which human Reactome pathways are affected by imatinib's mechanism of action?
+# Expected: Signaling by PDGF, Signaling by SCF-KIT, PIP3 activates AKT signaling, Regulation of KIT signaling,
+#           Role of ABL in ROBO-SLIT signaling, Downstream signal transduction, Myogenesis,
+#           Regulation of actin dynamics for phagocytic cup formation
+# Type: CONSTRUCT
+# Note: materialises the property chain :affectsPathway = :targets o :hasComponent o :participatesIn
+#       with a SPARQL property path, so no OWL reasoner is needed.
+PREFIX :     <https://itb.ac.id/a5103/tubes_2#>
+PREFIX res:  <https://itb.ac.id/a5103/tubes_2/resource/>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX xsd:  <http://www.w3.org/2001/XMLSchema#>
+
+CONSTRUCT {
+  ?drug :affectsPathway ?pathway ;
+        rdfs:label ?drugName .
+  ?pathway rdfs:label ?pathwayName .
+}
+WHERE {
+  ?drug a :Drug ;
+        rdfs:label ?drugName .
+  FILTER (LCASE(STR(?drugName)) = "imatinib")
+  ?drug :targets/:hasComponent/:participatesIn ?pathway .
+  ?pathway rdfs:label ?pathwayName .
+}
+
+RESULT
+----------------------------------------------------------------------------------------------------
+@prefix : <https://itb.ac.id/a5103/tubes_2#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix res: <https://itb.ac.id/a5103/tubes_2/resource/> .
+
+res:drug_1423 rdfs:label "imatinib"@en ;
+    :affectsPathway res:pathway_R-HSA-1257604,
+        res:pathway_R-HSA-1433557,
+        res:pathway_R-HSA-1433559,
+        res:pathway_R-HSA-186763,
+        res:pathway_R-HSA-186797,
+        res:pathway_R-HSA-2029482,
+        res:pathway_R-HSA-428890,
+        res:pathway_R-HSA-525793 .
+
+res:pathway_R-HSA-1257604 rdfs:label "PIP3 activates AKT signaling"@en .
+
+res:pathway_R-HSA-1433557 rdfs:label "Signaling by SCF-KIT"@en .
+
+res:pathway_R-HSA-1433559 rdfs:label "Regulation of KIT signaling"@en .
+
+res:pathway_R-HSA-186763 rdfs:label "Downstream signal transduction"@en .
+
+res:pathway_R-HSA-186797 rdfs:label "Signaling by PDGF"@en .
+
+res:pathway_R-HSA-2029482 rdfs:label "Regulation of actin dynamics for phagocytic cup formation"@en .
+
+res:pathway_R-HSA-428890 rdfs:label "Role of ABL in ROBO-SLIT signaling"@en .
+
+res:pathway_R-HSA-525793 rdfs:label "Myogenesis"@en .
+
+(17 triple(s))

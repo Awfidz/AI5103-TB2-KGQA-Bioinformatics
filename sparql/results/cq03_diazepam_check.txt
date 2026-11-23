@@ -1,0 +1,60 @@
+====================================================================================================
+CQ03_DIAZEPAM_CHECK  [SELECT]
+Seorang pasien datang dengan Alcohol withdrawal syndrome, tetapi saat diperiksa masih dalam kondisi Alcohol intoxication. Apakah diazepam diindikasikan resmi untuk kondisi pertama, namun sekaligus dikontraindikasikan pada kondisi kedua dan tergolong obat berizin dengan risiko keamanan tinggi?
+====================================================================================================
+
+QUERY
+----------------------------------------------------------------------------------------------------
+# CQ03: Seorang pasien datang dengan Alcohol withdrawal syndrome, tetapi saat diperiksa masih dalam kondisi
+#       Alcohol intoxication. Apakah diazepam diindikasikan resmi untuk kondisi pertama, namun sekaligus
+#       dikontraindikasikan pada kondisi kedua dan tergolong obat berizin dengan risiko keamanan tinggi?
+# EN:   Is diazepam officially indicated for alcohol withdrawal syndrome, contraindicated in alcohol
+#       intoxication, and a high-risk approved drug?
+# Expected: True
+# Type: SELECT (yes/no question: each condition is an EXISTS test, ?answer is their conjunction)
+# Note: high-risk approved drug = :HighRiskApprovedDrug = an approval, a contraindication and a strong
+#       adverse signal (LLR >= 100), written out so it works without a reasoner.
+PREFIX :     <https://itb.ac.id/a5103/tubes_2#>
+PREFIX res:  <https://itb.ac.id/a5103/tubes_2/resource/>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX xsd:  <http://www.w3.org/2001/XMLSchema#>
+
+SELECT ?drugName ?indicatedForWithdrawal ?contraindicatedInIntoxication ?highRiskApprovedDrug ?answer
+WHERE {
+  ?drug a :Drug ;
+        rdfs:label ?drugName .
+  FILTER (LCASE(STR(?drugName)) = "diazepam")
+
+  BIND (EXISTS {
+    ?drug :hasAssociation ?ind .
+    ?ind a :Indication ;
+         :forDisease/rdfs:label ?indDisease .
+    FILTER (LCASE(STR(?indDisease)) = "alcohol withdrawal syndrome")
+  } AS ?indicatedForWithdrawal)
+
+  BIND (EXISTS {
+    ?drug :hasAssociation ?ci .
+    ?ci a :Contraindication ;
+        :forDisease/rdfs:label ?ciDisease .
+    FILTER (LCASE(STR(?ciDisease)) = "alcohol intoxication")
+  } AS ?contraindicatedInIntoxication)
+
+  BIND (EXISTS {
+    ?drug :hasApproval ?approval ;
+          :hasAssociation ?anyCi ;
+          :hasAdverseSignal ?signal .
+    ?anyCi a :Contraindication .
+    ?signal :llrScore ?llr .
+    FILTER (?llr >= 100.0)
+  } AS ?highRiskApprovedDrug)
+
+  BIND (?indicatedForWithdrawal && ?contraindicatedInIntoxication && ?highRiskApprovedDrug AS ?answer)
+}
+
+RESULT
+----------------------------------------------------------------------------------------------------
+drugName | indicatedForWithdrawal | contraindicatedInIntoxication | highRiskApprovedDrug | answer
+---------+------------------------+-------------------------------+----------------------+-------
+diazepam | true                   | true                          | true                 | true
+
+(1 row(s))

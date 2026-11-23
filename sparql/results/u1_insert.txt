@@ -1,0 +1,55 @@
+====================================================================================================
+U1_INSERT  [INSERT]
+Insert a new drug (empagliflozin) together with its FDA regulatory approval, i.e. instances of two connected classes (:Drug -:hasApproval-> :RegulatoryApproval) in one operation.
+====================================================================================================
+
+QUERY
+----------------------------------------------------------------------------------------------------
+# U1: Insert a new drug (empagliflozin) together with its FDA regulatory approval,
+#     i.e. instances of two connected classes (:Drug -:hasApproval-> :RegulatoryApproval) in one operation.
+# Type: INSERT
+PREFIX :     <https://itb.ac.id/a5103/tubes_2#>
+PREFIX res:  <https://itb.ac.id/a5103/tubes_2/resource/>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX xsd:  <http://www.w3.org/2001/XMLSchema#>
+PREFIX owl:  <http://www.w3.org/2002/07/owl#>
+
+INSERT DATA {
+  res:drug_empagliflozin a owl:NamedIndividual , :Drug ;
+      rdfs:label "empagliflozin"@en ;
+      :molecularWeight "450.91"^^xsd:double ;
+      :hasApproval res:approval_EMPAGLIFLOZIN_FDA .
+
+  res:approval_EMPAGLIFLOZIN_FDA a owl:NamedIndividual , :RegulatoryApproval ;
+      :approvedBy res:agency_fda ;
+      :approvalDate "2014-08-01" .
+}
+
+RESULT (run on an in-memory copy of the KG; the shared KG is not modified)
+----------------------------------------------------------------------------------------------------
+Verification query:
+PREFIX :     <https://itb.ac.id/a5103/tubes_2#>
+PREFIX res:  <https://itb.ac.id/a5103/tubes_2/resource/>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+SELECT ?drug ?drugName ?approval ?agencyName ?approvalDate
+WHERE {
+  ?drug rdfs:label ?drugName ;
+        :hasApproval ?approval .
+  FILTER (LCASE(STR(?drugName)) = "empagliflozin")
+  ?approval :approvedBy/rdfs:label ?agencyName ;
+            :approvalDate ?approvalDate .
+}
+
+BEFORE the update:
+(no results)
+
+(0 row(s))
+
+AFTER the update:
+drug                   | drugName      | approval                       | agencyName | approvalDate
+-----------------------+---------------+--------------------------------+------------+-------------
+res:drug_empagliflozin | empagliflozin | res:approval_EMPAGLIFLOZIN_FDA | FDA        | 2014-08-01
+
+(1 row(s))
+
+Triple count: 1671 -> 1680 (+9)

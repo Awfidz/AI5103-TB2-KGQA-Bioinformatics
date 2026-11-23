@@ -1,0 +1,52 @@
+====================================================================================================
+CQ15_HIGH_RISK_DRUGS  [SELECT]
+Obat berizin dengan risiko keamanan tinggi apa saja yang terdapat dalam knowledge graph, beserta jumlah kontraindikasi dan skor LLR tertingginya?
+====================================================================================================
+
+QUERY
+----------------------------------------------------------------------------------------------------
+# CQ15: Obat berizin dengan risiko keamanan tinggi apa saja yang terdapat dalam knowledge graph, beserta
+#       jumlah kontraindikasi dan skor LLR tertingginya?
+# EN:   Which high-risk approved drugs are in the knowledge graph, with their number of contraindications and
+#       highest LLR score?
+# Expected: 9 drugs (all except trastuzumab), led by metformin (6 contraindications, max LLR 44808.792)
+# Type: SELECT
+# Note: lists all members of the defined class :HighRiskApprovedDrug (approval + contraindication + strong
+#       adverse signal with LLR >= 100), written out so it works with or without an OWL reasoner.
+PREFIX :     <https://itb.ac.id/a5103/tubes_2#>
+PREFIX res:  <https://itb.ac.id/a5103/tubes_2/resource/>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX xsd:  <http://www.w3.org/2001/XMLSchema#>
+
+SELECT ?drugName
+       (COUNT(DISTINCT ?contra) AS ?contraindications)
+       (MAX(?llr)               AS ?maxLLR)
+WHERE {
+  ?drug a :Drug ;
+        rdfs:label ?drugName ;
+        :hasApproval ?approval ;
+        :hasAssociation ?contra ;
+        :hasAdverseSignal ?signal .
+  ?approval a :RegulatoryApproval .
+  ?contra a :Contraindication .
+  ?signal :llrScore ?llr .
+  FILTER (?llr >= 100.0)
+}
+GROUP BY ?drugName
+ORDER BY DESC(?maxLLR)
+
+RESULT
+----------------------------------------------------------------------------------------------------
+drugName      | contraindications | maxLLR
+--------------+-------------------+----------
+metformin     | 6                 | 44808.792
+diazepam      | 4                 | 10918.615
+imatinib      | 6                 | 5981.245
+atorvastatin  | 4                 | 4620.818
+sildenafil    | 5                 | 4422.233
+omeprazole    | 3                 | 3186.151
+ciprofloxacin | 3                 | 1998.565
+losartan      | 4                 | 827.779
+chloroquine   | 3                 | 179.042
+
+(9 row(s))

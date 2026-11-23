@@ -1,0 +1,43 @@
+====================================================================================================
+CQ14_SMALL_MOLECULES_LIPINSKI  [SELECT]
+Obat molekul kecil apa saja yang memenuhi kriteria berat molekul aturan Lipinski (< 500 Da), beserta berat molekulnya?
+====================================================================================================
+
+QUERY
+----------------------------------------------------------------------------------------------------
+# CQ14: Obat molekul kecil apa saja yang memenuhi kriteria berat molekul aturan Lipinski (< 500 Da),
+#       beserta berat molekulnya?
+# EN:   Which small-molecule drugs meet Lipinski's molecular-weight criterion (< 500 Da), and what do they weigh?
+# Expected: metformin, diazepam, chloroquine, ciprofloxacin, omeprazole, losartan, sildenafil, imatinib
+#           (atorvastatin, 558.65 Da, fails; trastuzumab is not a small molecule)
+# Type: SELECT
+# Note: equivalent to the defined class :SmallMoleculeDrug (some :smiles) plus a numeric filter.
+PREFIX :     <https://itb.ac.id/a5103/tubes_2#>
+PREFIX res:  <https://itb.ac.id/a5103/tubes_2/resource/>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX xsd:  <http://www.w3.org/2001/XMLSchema#>
+
+SELECT ?drugName ?molecularWeight
+WHERE {
+  ?drug a :Drug ;
+        rdfs:label ?drugName ;
+        :smiles ?smiles ;
+        :molecularWeight ?molecularWeight .
+  FILTER (?molecularWeight < 500.0)
+}
+ORDER BY ?molecularWeight
+
+RESULT
+----------------------------------------------------------------------------------------------------
+drugName      | molecularWeight
+--------------+----------------
+metformin     | 129.167
+diazepam      | 284.74
+chloroquine   | 319.88
+ciprofloxacin | 331.347
+omeprazole    | 345.42
+losartan      | 422.92
+sildenafil    | 474.58
+imatinib      | 493.615
+
+(8 row(s))

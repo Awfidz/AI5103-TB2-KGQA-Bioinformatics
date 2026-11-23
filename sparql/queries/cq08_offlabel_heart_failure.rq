@@ -1,0 +1,27 @@
+# CQ08: Seorang dokter mempertimbangkan terapi off-label untuk pasien Chronic heart failure. Obat berizin yang
+#       juga digunakan secara off-label apa saja yang memiliki indikasi resmi untuk Hypertensive disorder
+#       sekaligus tercatat digunakan secara off-label untuk Chronic heart failure?
+# EN:   Which approved drugs with an off-label use are officially indicated for hypertensive disorder and are
+#       used off-label for chronic heart failure?
+# Expected: losartan
+# Type: SELECT
+# Note: approved + an indication + an off-label use = the defined class :RepurposedApprovedDrug.
+PREFIX :     <https://itb.ac.id/a5103/tubes_2#>
+PREFIX res:  <https://itb.ac.id/a5103/tubes_2/resource/>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX xsd:  <http://www.w3.org/2001/XMLSchema#>
+
+SELECT DISTINCT ?drugName ?indicationDisease ?offLabelDisease
+WHERE {
+  ?drug a :Drug ;
+        rdfs:label ?drugName ;
+        :hasApproval ?approval ;
+        :hasAssociation ?ind , ?off .
+  ?ind a :Indication ;
+       :forDisease/rdfs:label ?indicationDisease .
+  FILTER (LCASE(STR(?indicationDisease)) = "hypertensive disorder")
+  ?off a :OffLabelUse ;
+       :forDisease/rdfs:label ?offLabelDisease .
+  FILTER (LCASE(STR(?offLabelDisease)) = "chronic heart failure")
+}
+ORDER BY ?drugName

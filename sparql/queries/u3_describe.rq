@@ -1,0 +1,8 @@
+# U3: Describe one specific resource: the drug metformin (res:drug_1725).
+# Type: DESCRIBE
+PREFIX :     <https://itb.ac.id/a5103/tubes_2#>
+PREFIX res:  <https://itb.ac.id/a5103/tubes_2/resource/>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX xsd:  <http://www.w3.org/2001/XMLSchema#>
+
+DESCRIBE res:drug_1725

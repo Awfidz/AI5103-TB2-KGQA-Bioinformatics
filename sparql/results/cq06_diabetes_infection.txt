@@ -1,0 +1,50 @@
+====================================================================================================
+CQ06_DIABETES_INFECTION  [SELECT]
+Seorang pasien Diabetes mellitus type 2 sedang dirawat karena Acute infectious disease. Obat molekul kecil berizin dengan risiko keamanan tinggi apa saja yang diindikasikan untuk kondisi pertama namun dikontraindikasikan pada kondisi kedua, beserta berat molekulnya?
+====================================================================================================
+
+QUERY
+----------------------------------------------------------------------------------------------------
+# CQ06: Seorang pasien Diabetes mellitus type 2 sedang dirawat karena Acute infectious disease. Obat molekul
+#       kecil berizin dengan risiko keamanan tinggi apa saja yang diindikasikan untuk kondisi pertama namun
+#       dikontraindikasikan pada kondisi kedua, beserta berat molekulnya?
+# EN:   Which high-risk approved small-molecule drugs are indicated for type 2 diabetes but contraindicated in
+#       acute infectious disease, and what is their molecular weight?
+# Expected: metformin (129.167 Da)
+# Type: SELECT
+# Note: small molecule = has :smiles (:SmallMoleculeDrug); high-risk approved = approval + contraindication +
+#       strong adverse signal (:HighRiskApprovedDrug).
+PREFIX :     <https://itb.ac.id/a5103/tubes_2#>
+PREFIX res:  <https://itb.ac.id/a5103/tubes_2/resource/>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX xsd:  <http://www.w3.org/2001/XMLSchema#>
+
+SELECT DISTINCT ?drugName ?molecularWeight
+WHERE {
+  ?drug a :Drug ;
+        rdfs:label ?drugName ;
+        :smiles ?smiles ;
+        :molecularWeight ?molecularWeight ;
+        :hasApproval ?approval ;
+        :hasAssociation ?ind , ?ci .
+  ?ind a :Indication ;
+       :forDisease/rdfs:label ?indDisease .
+  FILTER (LCASE(STR(?indDisease)) = "diabetes mellitus type 2")
+  ?ci a :Contraindication ;
+      :forDisease/rdfs:label ?ciDisease .
+  FILTER (LCASE(STR(?ciDisease)) = "acute infectious disease")
+  FILTER EXISTS {
+    ?drug :hasAdverseSignal ?signal .
+    ?signal :llrScore ?llr .
+    FILTER (?llr >= 100.0)
+  }
+}
+ORDER BY ?drugName
+
+RESULT
+----------------------------------------------------------------------------------------------------
+drugName  | molecularWeight
+----------+----------------
+metformin | 129.167
+
+(1 row(s))
