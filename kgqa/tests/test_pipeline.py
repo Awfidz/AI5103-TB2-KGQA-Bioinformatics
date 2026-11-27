@@ -23,7 +23,10 @@ REPO = Path(__file__).resolve().parents[2]
 
 @pytest.fixture(scope="module")
 def kg():
-    return LocalKG([REPO / "ontology" / "drug_discovery.ttl"])
+    return LocalKG([
+        REPO / "ontology" / "drug_discovery.ttl",
+        REPO / "kg" / "drug_discovery_kg.ttl",
+    ])
 
 
 @pytest.fixture(scope="module")

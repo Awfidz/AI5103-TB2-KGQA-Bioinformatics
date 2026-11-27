@@ -85,6 +85,7 @@ The app uses a 4K-token context (`OLLAMA_NUM_CTX=4096`) to keep memory low. Olla
 **Option A: GraphDB.** Create a repository named `drug-kgqa`, import
 `ontology/drug_discovery.ttl` and the materialised KG from Step 4, and keep GraphDB running on port 7200.
 To limit memory, start GraphDB with a smaller heap (e.g. `-Xmx2g`).
+To reproduce the curated Step 4 graph, follow [`kg_population/README.md`](../kg_population/README.md).
 
 **Option B: local files (no GraphDB).** The app loads `ontology/drug_discovery.ttl` plus every `kg/*.ttl`
 file if that folder exists. Use `KG_FILES` to point at other files.

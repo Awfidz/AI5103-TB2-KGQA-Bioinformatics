@@ -1,7 +1,7 @@
 AI5103 Foundational AI - KGQA Assignment, Step 3: SPARQL queries and results
 Ontology: Pharmacotherapy and Drug Discovery Ontology (https://itb.ac.id/a5103/tubes_2)
-Backend:  Local rdflib graph (drug_discovery.ttl) - 1671 triples
-Run at:   2026-11-21 16:17
+Backend:  Local rdflib graph (drug_discovery.ttl, drug_discovery_kg.ttl) - 1625 triples
+Run at:   2026-11-27 15:57
 
 Contents: CQ01-CQ15 (competency questions as SELECT/CONSTRUCT), U1 INSERT, U2 DELETE with FILTER, U3 DESCRIBE.
 
@@ -844,7 +844,7 @@ res:drug_empagliflozin | empagliflozin | res:approval_EMPAGLIFLOZIN_FDA | FDA   
 
 (1 row(s))
 
-Triple count: 1671 -> 1680 (+9)
+Triple count: 1625 -> 1634 (+9)
 
 ====================================================================================================
 U2_DELETE  [DELETE]
@@ -903,7 +903,7 @@ AFTER the update:
 
 (0 row(s))
 
-Triple count: 1680 -> 1670 (-10)
+Triple count: 1634 -> 1624 (-10)
 
 ====================================================================================================
 U3_DESCRIBE  [DESCRIBE]

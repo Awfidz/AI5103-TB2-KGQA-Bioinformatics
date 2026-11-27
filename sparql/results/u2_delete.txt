@@ -55,4 +55,4 @@ AFTER the update:
 
 (0 row(s))
 
-Triple count: 1680 -> 1670 (-10)
+Triple count: 1634 -> 1624 (-10)

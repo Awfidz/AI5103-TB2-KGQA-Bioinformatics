@@ -52,4 +52,4 @@ res:drug_empagliflozin | empagliflozin | res:approval_EMPAGLIFLOZIN_FDA | FDA   
 
 (1 row(s))
 
-Triple count: 1671 -> 1680 (+9)
+Triple count: 1625 -> 1634 (+9)
