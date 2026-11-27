@@ -1,0 +1,22 @@
+PREFIX oops: <http://oops.linkeddata.es/def#>
+
+<http://oops.linkeddata.es/data/d8b73db9-c030-40b2-b5cd-28c37660c597>
+        a                               oops:pitfall;
+        oops:hasCode                    "P41 - No license declared";
+        oops:hasDescription             "The ontology metadata omits information about the license that applies to the ontology.";
+        oops:hasImportanceLevel         "IMPORTANT";
+        oops:hasName                    "No license declared";
+        oops:hasNumberAffectedElements  1 .
+
+<http://oops.linkeddata.es/data/4f382efd-bee0-4375-8925-dcab9c553a29>
+        a                               oops:pitfall;
+        oops:hasAffectedElement         "https://itb.ac.id/a5103/tubes_2#reportsEvent"^^<http://www.w3.org/2001/XMLSchema#anyURI> , "https://itb.ac.id/a5103/tubes_2#approvedBy"^^<http://www.w3.org/2001/XMLSchema#anyURI> , "https://itb.ac.id/a5103/tubes_2#hasAssociation"^^<http://www.w3.org/2001/XMLSchema#anyURI> , "https://itb.ac.id/a5103/tubes_2#hasApproval"^^<http://www.w3.org/2001/XMLSchema#anyURI> , "https://itb.ac.id/a5103/tubes_2#forDisease"^^<http://www.w3.org/2001/XMLSchema#anyURI> , "https://itb.ac.id/a5103/tubes_2#participatesIn"^^<http://www.w3.org/2001/XMLSchema#anyURI> , "https://itb.ac.id/a5103/tubes_2#hasAdverseSignal"^^<http://www.w3.org/2001/XMLSchema#anyURI> , "https://itb.ac.id/a5103/tubes_2#hasComponent"^^<http://www.w3.org/2001/XMLSchema#anyURI> , "https://itb.ac.id/a5103/tubes_2#affectsPathway"^^<http://www.w3.org/2001/XMLSchema#anyURI> , "https://itb.ac.id/a5103/tubes_2#targets"^^<http://www.w3.org/2001/XMLSchema#anyURI>;
+        oops:hasCode                    "P13-N - Inverse relationships not explicitly declared - No Suggestion";
+        oops:hasDescription             "This pitfall appears when any relationship (except for those that are defined as symmetric properties using owl:SymmetricProperty) does not have an inverse relationship (owl:inverseOf) defined within the ontology.";
+        oops:hasImportanceLevel         "MINOR";
+        oops:hasName                    "Inverse relationships not explicitly declared - No Suggestion";
+        oops:hasNumberAffectedElements  10 .
+
+<http://oops.linkeddata.es/data/48405ccd-b747-4260-ba60-9bdc4656136d>
+        a                oops:response;
+        oops:hasPitfall  <http://oops.linkeddata.es/data/d8b73db9-c030-40b2-b5cd-28c37660c597> , <http://oops.linkeddata.es/data/4f382efd-bee0-4375-8925-dcab9c553a29> .
