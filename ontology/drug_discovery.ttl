@@ -288,11 +288,3 @@ dct:title a owl:AnnotationProperty .
 [] a owl:AllDisjointClasses ;
     owl:members ( :Indication :Contraindication :OffLabelUse ) .
 
-[] a owl:AllDifferent ;
-    owl:distinctMembers [ rdf:rest [ rdf:rest [ rdf:rest [ rdf:rest [ rdf:rest [ rdf:rest [ rdf:rest [ rdf:rest [ rdf:rest [ rdf:rest () ] ] ] ] ] ] ] ] ] ] .
-
-[] a owl:AllDifferent ;
-    owl:distinctMembers [ rdf:rest [ rdf:rest [ rdf:rest [ rdf:rest [ rdf:rest [ rdf:rest [ rdf:rest [ rdf:rest [ rdf:rest [ rdf:rest [ rdf:rest [ rdf:rest [ rdf:rest [ rdf:rest () ] ] ] ] ] ] ] ] ] ] ] ] ] ] .
-
-[] a owl:AllDifferent ;
-    owl:distinctMembers [ rdf:rest [ rdf:rest [ rdf:rest [ rdf:rest [ rdf:rest [ rdf:rest [ rdf:rest [ rdf:rest [ rdf:rest [ rdf:rest [ rdf:rest [ rdf:rest [ rdf:rest [ rdf:rest [ rdf:rest [ rdf:rest [ rdf:rest [ rdf:rest [ rdf:rest [ rdf:rest [ rdf:rest [ rdf:rest () ] ] ] ] ] ] ] ] ] ] ] ] ] ] ] ] ] ] ] ] ] ] .
