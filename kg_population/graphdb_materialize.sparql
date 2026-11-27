@@ -1,0 +1,47 @@
+# Post-import materialization for GraphDB with the OWL2-RL (Optimized) ruleset.
+# Run the four updates in order, one request each (materialize_graphdb.py does this).
+# A line containing only ";" separates updates.
+# :ApprovedDrug, :RepurposedApprovedDrug and :affectsPathway are NOT handled here;
+# they are derived natively by the reasoner.
+
+PREFIX : <https://itb.ac.id/a5103/tubes_2#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+
+# 1. owl:someValuesFrom xsd:string on :smiles is not evaluated by the reasoner.
+INSERT { ?d a :SmallMoleculeDrug . }
+WHERE {
+  ?d a :Drug ;
+     :smiles ?smiles .
+  FILTER(DATATYPE(?smiles) = xsd:string)
+}
+;
+# 2. The datatype facet >= 100.0 on :llrScore is not evaluated by the reasoner.
+INSERT { ?s a :StrongAdverseSignal . }
+WHERE {
+  ?s a :AdverseSignal ;
+     :llrScore ?llr .
+  FILTER(xsd:double(?llr) >= 100.0)
+}
+;
+# 3. Must run after update 2 (depends on :StrongAdverseSignal).
+INSERT { ?d a :HighRiskApprovedDrug . }
+WHERE {
+  ?d a :Drug ;
+     :hasApproval ?approval ;
+     :hasAssociation ?contra ;
+     :hasAdverseSignal ?signal .
+  ?approval a :RegulatoryApproval .
+  ?contra a :Contraindication .
+  ?signal a :StrongAdverseSignal .
+}
+;
+# 4. minQualifiedCardinality 2 on :hasComponent is not evaluated by the reasoner.
+INSERT { ?t a :ProteinComplexTarget . }
+WHERE {
+  {
+    SELECT ?t
+    WHERE { ?t a :Target ; :hasComponent ?p . }
+    GROUP BY ?t
+    HAVING (COUNT(DISTINCT ?p) >= 2)
+  }
+}

@@ -2,3 +2,5 @@ docs/
 .venv/
 __pycache__/
 .pytest_cache/
+kg_population/data_csv/
+kg/drug_discovery_kg.ttl.tmp

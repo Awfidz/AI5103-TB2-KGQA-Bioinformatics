@@ -1,0 +1,110 @@
+@prefix :     <https://itb.ac.id/a5103/tubes_2#> .
+@prefix res:  <https://itb.ac.id/a5103/tubes_2/resource/> .
+@prefix map:  <https://itb.ac.id/a5103/tubes_2/mapping/> .
+@prefix rr:   <http://www.w3.org/ns/r2rml#> .
+@prefix rml:  <http://semweb.mmlab.be/ns/rml#> .
+@prefix ql:   <http://semweb.mmlab.be/ns/ql#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl:  <http://www.w3.org/2002/07/owl#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+
+map:DrugSmall a rr:TriplesMap ;
+    rml:logicalSource [ rml:source "data_csv/drug_small.csv" ; rml:referenceFormulation ql:CSV ] ;
+    rr:subjectMap [ rr:template "https://itb.ac.id/a5103/tubes_2/resource/drug_{struct_id}" ; rr:class owl:NamedIndividual, :Drug ] ;
+    rr:predicateObjectMap [ rr:predicate rdfs:label ; rr:objectMap [ rml:reference "name" ; rr:language "en" ] ] ;
+    rr:predicateObjectMap [ rr:predicate :smiles ; rr:objectMap [ rml:reference "smiles" ; rr:datatype xsd:string ] ] ;
+    rr:predicateObjectMap [ rr:predicate :molecularWeight ; rr:objectMap [ rml:reference "cd_molweight" ; rr:datatype xsd:double ] ] .
+
+map:DrugNonSmall a rr:TriplesMap ;
+    rml:logicalSource [ rml:source "data_csv/drug_nonsmall.csv" ; rml:referenceFormulation ql:CSV ] ;
+    rr:subjectMap [ rr:template "https://itb.ac.id/a5103/tubes_2/resource/drug_{struct_id}" ; rr:class owl:NamedIndividual, :Drug, :NonSmallMoleculeDrug ] ;
+    rr:predicateObjectMap [ rr:predicate rdfs:label ; rr:objectMap [ rml:reference "name" ; rr:language "en" ] ] ;
+    rr:predicateObjectMap [ rr:predicate :molecularWeight ; rr:objectMap [ rml:reference "cd_molweight" ; rr:datatype xsd:double ] ] .
+
+map:Agency a rr:TriplesMap ;
+    rml:logicalSource [ rml:source "data_csv/agency.csv" ; rml:referenceFormulation ql:CSV ] ;
+    rr:subjectMap [ rr:template "https://itb.ac.id/a5103/tubes_2/resource/agency_{agency_slug}" ; rr:class owl:NamedIndividual, :RegulatoryAgency ] ;
+    rr:predicateObjectMap [ rr:predicate rdfs:label ; rr:objectMap [ rml:reference "agency" ; rr:language "en" ] ] .
+
+map:Approval a rr:TriplesMap ;
+    rml:logicalSource [ rml:source "data_csv/approval.csv" ; rml:referenceFormulation ql:CSV ] ;
+    rr:subjectMap [ rr:template "https://itb.ac.id/a5103/tubes_2/resource/approval_{approval_id}" ; rr:class owl:NamedIndividual, :RegulatoryApproval ] ;
+    rr:predicateObjectMap [ rr:predicate :approvedBy ; rr:objectMap [ rr:template "https://itb.ac.id/a5103/tubes_2/resource/agency_{agency_slug}" ; rr:termType rr:IRI ] ] ;
+    rr:predicateObjectMap [ rr:predicate :approvalDate ; rr:objectMap [ rml:reference "approval_date" ; rr:datatype xsd:string ] ] .
+
+map:DrugApproval a rr:TriplesMap ;
+    rml:logicalSource [ rml:source "data_csv/approval.csv" ; rml:referenceFormulation ql:CSV ] ;
+    rr:subjectMap [ rr:template "https://itb.ac.id/a5103/tubes_2/resource/drug_{struct_id}" ] ;
+    rr:predicateObjectMap [ rr:predicate :hasApproval ; rr:objectMap [ rr:template "https://itb.ac.id/a5103/tubes_2/resource/approval_{approval_id}" ; rr:termType rr:IRI ] ] .
+
+map:Disease a rr:TriplesMap ;
+    rml:logicalSource [ rml:source "data_csv/disease.csv" ; rml:referenceFormulation ql:CSV ] ;
+    rr:subjectMap [ rr:template "https://itb.ac.id/a5103/tubes_2/resource/disease_{concept_id}" ; rr:class owl:NamedIndividual, :Disease ] ;
+    rr:predicateObjectMap [ rr:predicate rdfs:label ; rr:objectMap [ rml:reference "concept_name" ; rr:language "en" ] ] .
+
+map:Indication a rr:TriplesMap ;
+    rml:logicalSource [ rml:source "data_csv/assoc_indication.csv" ; rml:referenceFormulation ql:CSV ] ;
+    rr:subjectMap [ rr:template "https://itb.ac.id/a5103/tubes_2/resource/assoc_{assoc_id}" ; rr:class owl:NamedIndividual, :Indication ] ;
+    rr:predicateObjectMap [ rr:predicate :forDisease ; rr:objectMap [ rr:template "https://itb.ac.id/a5103/tubes_2/resource/disease_{concept_id}" ; rr:termType rr:IRI ] ] .
+
+map:Contraindication a rr:TriplesMap ;
+    rml:logicalSource [ rml:source "data_csv/assoc_contraindication.csv" ; rml:referenceFormulation ql:CSV ] ;
+    rr:subjectMap [ rr:template "https://itb.ac.id/a5103/tubes_2/resource/assoc_{assoc_id}" ; rr:class owl:NamedIndividual, :Contraindication ] ;
+    rr:predicateObjectMap [ rr:predicate :forDisease ; rr:objectMap [ rr:template "https://itb.ac.id/a5103/tubes_2/resource/disease_{concept_id}" ; rr:termType rr:IRI ] ] .
+
+map:OffLabelUse a rr:TriplesMap ;
+    rml:logicalSource [ rml:source "data_csv/assoc_offlabel.csv" ; rml:referenceFormulation ql:CSV ] ;
+    rr:subjectMap [ rr:template "https://itb.ac.id/a5103/tubes_2/resource/assoc_{assoc_id}" ; rr:class owl:NamedIndividual, :OffLabelUse ] ;
+    rr:predicateObjectMap [ rr:predicate :forDisease ; rr:objectMap [ rr:template "https://itb.ac.id/a5103/tubes_2/resource/disease_{concept_id}" ; rr:termType rr:IRI ] ] .
+
+map:DrugAssociation a rr:TriplesMap ;
+    rml:logicalSource [ rml:source "data_csv/association_clean.csv" ; rml:referenceFormulation ql:CSV ] ;
+    rr:subjectMap [ rr:template "https://itb.ac.id/a5103/tubes_2/resource/drug_{struct_id}" ] ;
+    rr:predicateObjectMap [ rr:predicate :hasAssociation ; rr:objectMap [ rr:template "https://itb.ac.id/a5103/tubes_2/resource/assoc_{assoc_id}" ; rr:termType rr:IRI ] ] .
+
+map:AdverseEvent a rr:TriplesMap ;
+    rml:logicalSource [ rml:source "data_csv/adverse_event.csv" ; rml:referenceFormulation ql:CSV ] ;
+    rr:subjectMap [ rr:template "https://itb.ac.id/a5103/tubes_2/resource/ae_{meddra_code}" ; rr:class owl:NamedIndividual, :AdverseEvent ] ;
+    rr:predicateObjectMap [ rr:predicate rdfs:label ; rr:objectMap [ rml:reference "meddra_name" ; rr:language "en" ] ] .
+
+map:AdverseSignal a rr:TriplesMap ;
+    rml:logicalSource [ rml:source "data_csv/adverse_signal.csv" ; rml:referenceFormulation ql:CSV ] ;
+    rr:subjectMap [ rr:template "https://itb.ac.id/a5103/tubes_2/resource/signal_{signal_id}" ; rr:class owl:NamedIndividual, :AdverseSignal ] ;
+    rr:predicateObjectMap [ rr:predicate :reportsEvent ; rr:objectMap [ rr:template "https://itb.ac.id/a5103/tubes_2/resource/ae_{meddra_code}" ; rr:termType rr:IRI ] ] ;
+    rr:predicateObjectMap [ rr:predicate :llrScore ; rr:objectMap [ rml:reference "llr" ; rr:datatype xsd:double ] ] .
+
+map:DrugAdverseSignal a rr:TriplesMap ;
+    rml:logicalSource [ rml:source "data_csv/adverse_signal.csv" ; rml:referenceFormulation ql:CSV ] ;
+    rr:subjectMap [ rr:template "https://itb.ac.id/a5103/tubes_2/resource/drug_{struct_id}" ] ;
+    rr:predicateObjectMap [ rr:predicate :hasAdverseSignal ; rr:objectMap [ rr:template "https://itb.ac.id/a5103/tubes_2/resource/signal_{signal_id}" ; rr:termType rr:IRI ] ] .
+
+map:Target a rr:TriplesMap ;
+    rml:logicalSource [ rml:source "data_csv/target_clean.csv" ; rml:referenceFormulation ql:CSV ] ;
+    rr:subjectMap [ rr:template "https://itb.ac.id/a5103/tubes_2/resource/target_{target_id}" ; rr:class owl:NamedIndividual, :Target ] ;
+    rr:predicateObjectMap [ rr:predicate rdfs:label ; rr:objectMap [ rml:reference "target_name" ; rr:language "en" ] ] .
+
+map:DrugTarget a rr:TriplesMap ;
+    rml:logicalSource [ rml:source "data_csv/drug_target.csv" ; rml:referenceFormulation ql:CSV ] ;
+    rr:subjectMap [ rr:template "https://itb.ac.id/a5103/tubes_2/resource/drug_{struct_id}" ] ;
+    rr:predicateObjectMap [ rr:predicate :targets ; rr:objectMap [ rr:template "https://itb.ac.id/a5103/tubes_2/resource/target_{target_id}" ; rr:termType rr:IRI ] ] .
+
+map:Protein a rr:TriplesMap ;
+    rml:logicalSource [ rml:source "data_csv/protein.csv" ; rml:referenceFormulation ql:CSV ] ;
+    rr:subjectMap [ rr:template "https://itb.ac.id/a5103/tubes_2/resource/protein_{accession}" ; rr:class owl:NamedIndividual, :Protein ] ;
+    rr:predicateObjectMap [ rr:predicate :uniprotAccession ; rr:objectMap [ rml:reference "accession" ; rr:datatype xsd:string ] ] ;
+    rr:predicateObjectMap [ rr:predicate rdfs:label ; rr:objectMap [ rml:reference "protein_name" ; rr:language "en" ] ] .
+
+map:TargetProtein a rr:TriplesMap ;
+    rml:logicalSource [ rml:source "data_csv/target_protein.csv" ; rml:referenceFormulation ql:CSV ] ;
+    rr:subjectMap [ rr:template "https://itb.ac.id/a5103/tubes_2/resource/target_{target_id}" ] ;
+    rr:predicateObjectMap [ rr:predicate :hasComponent ; rr:objectMap [ rr:template "https://itb.ac.id/a5103/tubes_2/resource/protein_{accession}" ; rr:termType rr:IRI ] ] .
+
+map:Pathway a rr:TriplesMap ;
+    rml:logicalSource [ rml:source "data_csv/pathway.csv" ; rml:referenceFormulation ql:CSV ] ;
+    rr:subjectMap [ rr:template "https://itb.ac.id/a5103/tubes_2/resource/pathway_{pathway_id}" ; rr:class owl:NamedIndividual, :Pathway ] ;
+    rr:predicateObjectMap [ rr:predicate rdfs:label ; rr:objectMap [ rml:reference "pathway_name" ; rr:language "en" ] ] .
+
+map:ProteinPathway a rr:TriplesMap ;
+    rml:logicalSource [ rml:source "data_csv/protein_pathway.csv" ; rml:referenceFormulation ql:CSV ] ;
+    rr:subjectMap [ rr:template "https://itb.ac.id/a5103/tubes_2/resource/protein_{accession}" ] ;
+    rr:predicateObjectMap [ rr:predicate :participatesIn ; rr:objectMap [ rr:template "https://itb.ac.id/a5103/tubes_2/resource/pathway_{pathway_id}" ; rr:termType rr:IRI ] ] .

@@ -1,0 +1,2031 @@
+@prefix agg: <http://jena.apache.org/ARQ/function/aggregate#> .
+@prefix : <https://itb.ac.id/a5103/tubes_2#> .
+@prefix sail: <http://www.openrdf.org/config/sail#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix geof: <http://www.opengis.net/def/function/geosparql/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix fn: <http://www.w3.org/2005/xpath-functions> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix spif: <http://spinrdf.org/spif#> .
+@prefix path: <http://www.ontotext.com/path#> .
+@prefix dct: <http://purl.org/dc/terms/> .
+@prefix array: <http://www.w3.org/2005/xpath-functions/array> .
+@prefix apf: <http://jena.apache.org/ARQ/property#> .
+@prefix rep: <http://www.openrdf.org/config/repository#> .
+@prefix map: <http://www.w3.org/2005/xpath-functions/map> .
+@prefix sr: <http://www.openrdf.org/config/repository/sail#> .
+@prefix res: <https://itb.ac.id/a5103/tubes_2/resource/> .
+@prefix wgs: <http://www.w3.org/2003/01/geo/wgs84_pos#> .
+@prefix gn: <http://www.geonames.org/ontology#> .
+@prefix afn: <http://jena.apache.org/ARQ/function#> .
+@prefix list: <http://jena.apache.org/ARQ/list#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix ofn: <http://www.ontotext.com/sparql/functions/> .
+@prefix geoext: <http://rdf.useekm.com/ext#> .
+@prefix graphdb: <http://www.ontotext.com/config/graphdb#> .
+@prefix math: <http://www.w3.org/2005/xpath-functions/math> .
+@prefix omgeo: <http://www.ontotext.com/owlim/geo#> .
+
+dct:created a owl:AnnotationProperty .
+
+dct:description a owl:AnnotationProperty .
+
+dct:title a owl:AnnotationProperty .
+
+<https://itb.ac.id/a5103/tubes_2> a owl:Ontology .
+
+:HighRiskApprovedDrug a owl:Class;
+  rdfs:subClassOf :ApprovedDrug;
+  owl:equivalentClass _:node1;
+  rdfs:comment "An approved drug that has at least one clinical contraindication and at least one strong FAERS adverse signal (LLR >= 100)."@en .
+
+:ApprovedDrug a owl:Class;
+  rdfs:subClassOf :Drug;
+  owl:equivalentClass _:node32;
+  rdfs:comment "A drug that has received at least one regulatory approval."@en .
+
+_:node1 a owl:Class;
+  owl:intersectionOf _:node2 .
+
+_:node4 a owl:Restriction;
+  owl:someValuesFrom :Contraindication;
+  owl:onProperty :hasAssociation .
+
+:hasAssociation a owl:ObjectProperty, owl:InverseFunctionalProperty;
+  rdfs:domain :Drug;
+  rdfs:range :DrugDiseaseAssociation;
+  rdfs:comment "Links a drug to a unique reified drug-disease clinical association."@en .
+
+:Contraindication a owl:Class;
+  rdfs:subClassOf :DrugDiseaseAssociation;
+  rdfs:comment "A clinical condition in which the administration of a drug is prohibited or unsafe."@en .
+
+_:node6 a owl:Restriction;
+  owl:someValuesFrom :StrongAdverseSignal;
+  owl:onProperty :hasAdverseSignal .
+
+:hasAdverseSignal a owl:ObjectProperty, owl:InverseFunctionalProperty;
+  rdfs:domain :Drug;
+  rdfs:range :AdverseSignal;
+  rdfs:comment "Links a drug to a unique FAERS adverse event signal."@en .
+
+:StrongAdverseSignal a owl:Class;
+  rdfs:subClassOf :AdverseSignal;
+  owl:equivalentClass _:node25;
+  rdfs:comment "A pharmacovigilance signal with a Log-Likelihood Ratio (LLR) score >= 100.0."@en .
+
+:ProteinComplexTarget a owl:Class;
+  rdfs:subClassOf :Target;
+  owl:equivalentClass _:node7;
+  rdfs:comment "A pharmacological target composed of at least two distinct protein subunits."@en .
+
+:Target a owl:Class;
+  rdfs:subClassOf _:node37;
+  rdfs:comment "A biological target composed of at least one UniProt protein subunit."@en .
+
+_:node7 a owl:Class;
+  owl:intersectionOf _:node8 .
+
+_:node10 a owl:Restriction;
+  owl:onProperty :hasComponent;
+  owl:onClass :Protein .
+
+:Protein a owl:Class;
+  rdfs:subClassOf _:node45;
+  owl:hasKey _:node46;
+  rdfs:comment "A protein entity uniquely keyed by its UniProtKB accession."@en .
+
+:hasComponent a owl:ObjectProperty;
+  rdfs:domain :Target;
+  rdfs:range :Protein;
+  rdfs:comment "Links a pharmacological target to a constituent UniProt protein."@en .
+
+:RepurposedApprovedDrug a owl:Class;
+  rdfs:subClassOf :ApprovedDrug;
+  owl:equivalentClass _:node11;
+  rdfs:comment "An approved drug that has both an official approved indication and a documented off-label use."@en .
+
+_:node11 a owl:Class;
+  owl:intersectionOf _:node12 .
+
+_:node14 a owl:Restriction;
+  owl:someValuesFrom :Indication;
+  owl:onProperty :hasAssociation .
+
+:Indication a owl:Class;
+  rdfs:subClassOf :DrugDiseaseAssociation;
+  rdfs:comment "An official therapeutic indication for which a drug is approved."@en .
+
+_:node16 a owl:Restriction;
+  owl:someValuesFrom :OffLabelUse;
+  owl:onProperty :hasAssociation .
+
+:OffLabelUse a owl:Class;
+  rdfs:subClassOf :DrugDiseaseAssociation;
+  rdfs:comment "A documented clinical use of a drug outside its officially approved indication."@en .
+
+:affectsPathway a owl:ObjectProperty;
+  rdfs:domain :Drug;
+  rdfs:range :Pathway;
+  owl:propertyChainAxiom _:node17;
+  rdfs:comment "Inferred property chain linking a drug to a human Reactome pathway via its target proteins."@en .
+
+:Drug a owl:Class;
+  rdfs:subClassOf _:node47;
+  rdfs:comment "An active pharmaceutical ingredient or therapeutic substance from DrugCentral."@en .
+
+:Pathway a owl:Class;
+  rdfs:comment "A human biological pathway from Reactome."@en .
+
+:targets a owl:ObjectProperty;
+  rdfs:domain :Drug;
+  rdfs:range :Target;
+  rdfs:comment "Links a drug to its primary pharmacological target (Mechanism of Action)."@en .
+
+:participatesIn a owl:ObjectProperty;
+  rdfs:domain :Protein;
+  rdfs:range :Pathway;
+  rdfs:comment "Links a human protein to a Reactome biological pathway."@en .
+
+:approvalDate a owl:FunctionalProperty, owl:DatatypeProperty;
+  rdfs:domain :RegulatoryApproval;
+  rdfs:range xsd:string;
+  rdfs:comment "Date of regulatory approval formatted as YYYY-MM-DD (stored as xsd:string for HermiT compatibility)."@en .
+
+:RegulatoryApproval a owl:Class;
+  rdfs:subClassOf _:node36;
+  rdfs:comment "A formal marketing authorization granted to a drug by exactly one regulatory agency."@en .
+
+:NonSmallMoleculeDrug a owl:Class;
+  rdfs:subClassOf :Drug, _:node20;
+  rdfs:comment "A biologic or macromolecular drug (e.g., monoclonal antibody) that has no small-molecule SMILES structure."@en .
+
+_:node20 a owl:Restriction;
+  owl:onProperty :smiles;
+  owl:maxQualifiedCardinality "0"^^xsd:nonNegativeInteger .
+
+:smiles a owl:FunctionalProperty, owl:DatatypeProperty;
+  rdfs:domain :Drug;
+  rdfs:range xsd:string;
+  rdfs:comment "Canonical SMILES chemical structure notation of a small-molecule drug."@en .
+
+:SmallMoleculeDrug a owl:Class;
+  rdfs:subClassOf :Drug;
+  owl:equivalentClass _:node21;
+  rdfs:comment "A drug automatically classified by the presence of a canonical chemical SMILES structure."@en .
+
+_:node21 a owl:Class;
+  owl:intersectionOf _:node22 .
+
+_:node24 a owl:Restriction;
+  owl:someValuesFrom xsd:string;
+  owl:onProperty :smiles .
+
+:AdverseSignal a owl:Class;
+  rdfs:subClassOf _:node38, _:node39, _:node40;
+  rdfs:comment "A statistical pharmacovigilance signal linking a drug to exactly one adverse event with a positive LLR score in FAERS."@en .
+
+_:node25 a owl:Class;
+  owl:intersectionOf _:node26 .
+
+_:node28 a owl:Restriction;
+  owl:someValuesFrom _:node29;
+  owl:onProperty :llrScore .
+
+:llrScore a owl:FunctionalProperty, owl:DatatypeProperty;
+  rdfs:domain :AdverseSignal;
+  rdfs:range xsd:double;
+  rdfs:comment "Log-Likelihood Ratio score measuring FAERS disproportionality signal strength."@en .
+
+_:node29 a rdfs:Datatype .
+
+:approvedBy a owl:FunctionalProperty, owl:ObjectProperty;
+  rdfs:domain :RegulatoryApproval;
+  rdfs:range :RegulatoryAgency;
+  rdfs:comment "Links a regulatory approval to the single granting agency."@en .
+
+:RegulatoryAgency a owl:Class;
+  rdfs:comment "A government authority responsible for approving drugs (e.g., FDA, EMA, PMDA)."@en .
+
+:forDisease a owl:FunctionalProperty, owl:ObjectProperty;
+  rdfs:domain :DrugDiseaseAssociation;
+  rdfs:range :Disease;
+  rdfs:comment "Links a drug-disease association to the single involved disease."@en .
+
+:DrugDiseaseAssociation a owl:Class;
+  rdfs:subClassOf _:node44;
+  rdfs:comment "A reified clinical relationship linking a drug to exactly one disease."@en .
+
+:Disease a owl:Class;
+  rdfs:comment "A clinical disease, disorder, or medical condition from DrugCentral OMOP concepts."@en .
+
+:hasApproval a owl:ObjectProperty, owl:InverseFunctionalProperty;
+  rdfs:domain :Drug;
+  rdfs:range :RegulatoryApproval .
+
+:molecularWeight a owl:FunctionalProperty, owl:DatatypeProperty;
+  rdfs:domain :Drug;
+  rdfs:range xsd:double .
+
+:reportsEvent a owl:FunctionalProperty, owl:ObjectProperty;
+  rdfs:domain :AdverseSignal;
+  rdfs:range :AdverseEvent .
+
+:AdverseEvent a owl:Class .
+
+:uniprotAccession a owl:FunctionalProperty, owl:DatatypeProperty;
+  rdfs:domain :Protein;
+  rdfs:range xsd:string .
+
+_:node32 a owl:Class;
+  owl:intersectionOf _:node33 .
+
+_:node35 a owl:Restriction;
+  owl:someValuesFrom :RegulatoryApproval;
+  owl:onProperty :hasApproval .
+
+_:node36 a owl:Restriction;
+  owl:onProperty :approvedBy;
+  owl:onClass :RegulatoryAgency .
+
+_:node37 a owl:Restriction;
+  owl:onProperty :hasComponent;
+  owl:onClass :Protein .
+
+_:node38 a owl:Restriction;
+  owl:onProperty :reportsEvent;
+  owl:onClass :AdverseEvent .
+
+_:node39 a owl:Restriction;
+  owl:onProperty :llrScore .
+
+_:node40 a owl:Restriction;
+  owl:onProperty :llrScore;
+  owl:allValuesFrom _:node41 .
+
+_:node41 a rdfs:Datatype .
+
+_:node44 a owl:Restriction;
+  owl:onProperty :forDisease;
+  owl:onClass :Disease .
+
+_:node45 a owl:Restriction;
+  owl:onProperty :uniprotAccession .
+
+_:node47 a owl:Restriction;
+  owl:onProperty :molecularWeight;
+  owl:allValuesFrom _:node48 .
+
+_:node48 a rdfs:Datatype .
+
+_:node51 a owl:AllDisjointClasses;
+  owl:members _:node52 .
+
+_:node62 a owl:AllDisjointClasses;
+  owl:members _:node63 .
+
+_:node65 a owl:AllDisjointClasses;
+  owl:members _:node66 .
+
+_:node69 a owl:AllDifferent .
+
+_:node80 a owl:AllDifferent .
+
+_:node95 a owl:AllDifferent .
+
+res:ae_10003246 a owl:NamedIndividual, :AdverseEvent .
+
+res:ae_10004146 a owl:NamedIndividual, :AdverseEvent .
+
+res:ae_10010144 a owl:NamedIndividual, :AdverseEvent .
+
+res:ae_10011906 a owl:NamedIndividual, :AdverseEvent .
+
+res:ae_10013654 a owl:NamedIndividual, :AdverseEvent .
+
+res:ae_10013700 a owl:NamedIndividual, :AdverseEvent .
+
+res:ae_10013968 a owl:NamedIndividual, :AdverseEvent .
+
+res:ae_10019717 a owl:NamedIndividual, :AdverseEvent .
+
+res:ae_10020993 a owl:NamedIndividual, :AdverseEvent .
+
+res:ae_10021027 a owl:NamedIndividual, :AdverseEvent .
+
+res:ae_10023676 a owl:NamedIndividual, :AdverseEvent .
+
+res:ae_10028411 a owl:NamedIndividual, :AdverseEvent .
+
+res:ae_10028584 a owl:NamedIndividual, :AdverseEvent .
+
+res:ae_10034280 a owl:NamedIndividual, :AdverseEvent .
+
+res:ae_10039020 a owl:NamedIndividual, :AdverseEvent .
+
+res:ae_10039163 a owl:NamedIndividual, :AdverseEvent .
+
+res:ae_10042868 a owl:NamedIndividual, :AdverseEvent .
+
+res:ae_10043255 a owl:NamedIndividual, :AdverseEvent .
+
+res:ae_10050282 a owl:NamedIndividual, :AdverseEvent .
+
+res:ae_10050528 a owl:NamedIndividual, :AdverseEvent .
+
+res:ae_10053762 a owl:NamedIndividual, :AdverseEvent .
+
+res:ae_10059866 a owl:NamedIndividual, :AdverseEvent .
+
+res:ae_10061194 a owl:NamedIndividual, :AdverseEvent .
+
+res:ae_10061818 a owl:NamedIndividual, :AdverseEvent .
+
+res:ae_10064848 a owl:NamedIndividual, :AdverseEvent .
+
+res:ae_10064911 a owl:NamedIndividual, :AdverseEvent .
+
+res:ae_10066371 a owl:NamedIndividual, :AdverseEvent .
+
+res:ae_10066901 a owl:NamedIndividual, :AdverseEvent .
+
+res:ae_10069339 a owl:NamedIndividual, :AdverseEvent .
+
+res:ae_10070863 a owl:NamedIndividual, :AdverseEvent .
+
+res:ae_10083073 a owl:NamedIndividual, :AdverseEvent .
+
+res:agency_ema a owl:NamedIndividual, :RegulatoryAgency .
+
+res:agency_fda a owl:NamedIndividual, :RegulatoryAgency .
+
+res:agency_pmda a owl:NamedIndividual, :RegulatoryAgency .
+
+res:approval_APR000253 a owl:NamedIndividual, :RegulatoryApproval .
+
+res:approval_APR000254 a owl:NamedIndividual, :RegulatoryApproval .
+
+res:approval_APR000383 a owl:NamedIndividual, :RegulatoryApproval .
+
+res:approval_APR000445 a owl:NamedIndividual, :RegulatoryApproval .
+
+res:approval_APR000446 a owl:NamedIndividual, :RegulatoryApproval .
+
+res:approval_APR000447 a owl:NamedIndividual, :RegulatoryApproval .
+
+res:approval_APR000636 a owl:NamedIndividual, :RegulatoryApproval .
+
+res:approval_APR000894 a owl:NamedIndividual, :RegulatoryApproval .
+
+res:approval_APR000895 a owl:NamedIndividual, :RegulatoryApproval .
+
+res:approval_APR000973 a owl:NamedIndividual, :RegulatoryApproval .
+
+res:approval_APR002293 a owl:NamedIndividual, :RegulatoryApproval .
+
+res:approval_APR002294 a owl:NamedIndividual, :RegulatoryApproval .
+
+res:approval_APR002295 a owl:NamedIndividual, :RegulatoryApproval .
+
+res:approval_APR003728 a owl:NamedIndividual, :RegulatoryApproval .
+
+res:approval_APR003756 a owl:NamedIndividual, :RegulatoryApproval .
+
+res:approval_APR003879 a owl:NamedIndividual, :RegulatoryApproval .
+
+res:assoc_ASSOC005619 a owl:NamedIndividual, :Indication .
+
+res:disease_21000477 a owl:NamedIndividual, :Disease .
+
+res:assoc_ASSOC005620 a owl:NamedIndividual, :Indication .
+
+res:disease_21000489 a owl:NamedIndividual, :Disease .
+
+res:assoc_ASSOC005621 a owl:NamedIndividual, :Indication .
+
+res:disease_21000490 a owl:NamedIndividual, :Disease .
+
+res:assoc_ASSOC005622 a owl:NamedIndividual, :Contraindication .
+
+res:disease_21000604 a owl:NamedIndividual, :Disease .
+
+res:assoc_ASSOC005623 a owl:NamedIndividual, :Contraindication .
+
+res:disease_21000725 a owl:NamedIndividual, :Disease .
+
+res:assoc_ASSOC005624 a owl:NamedIndividual, :Contraindication .
+
+res:disease_21000750 a owl:NamedIndividual, :Disease .
+
+res:assoc_ASSOC005631 a owl:NamedIndividual, :Contraindication .
+
+res:disease_21001432 a owl:NamedIndividual, :Disease .
+
+res:assoc_ASSOC005635 a owl:NamedIndividual, :Contraindication .
+
+res:disease_21001578 a owl:NamedIndividual, :Disease .
+
+res:assoc_ASSOC005642 a owl:NamedIndividual, :Contraindication .
+
+res:disease_21002196 a owl:NamedIndividual, :Disease .
+
+res:assoc_ASSOC007832 a owl:NamedIndividual, :Contraindication .
+
+res:disease_21000007 a owl:NamedIndividual, :Disease .
+
+res:assoc_ASSOC007833 a owl:NamedIndividual, :Indication .
+
+res:disease_21000599 a owl:NamedIndividual, :Disease .
+
+res:assoc_ASSOC007834 a owl:NamedIndividual, :Contraindication .
+
+res:assoc_ASSOC007835 a owl:NamedIndividual, :Contraindication .
+
+res:disease_21000609 a owl:NamedIndividual, :Disease .
+
+res:assoc_ASSOC007836 a owl:NamedIndividual, :Contraindication .
+
+res:disease_21000701 a owl:NamedIndividual, :Disease .
+
+res:assoc_ASSOC007844 a owl:NamedIndividual, :Indication .
+
+res:assoc_ASSOC007845 a owl:NamedIndividual, :Indication .
+
+res:disease_21001435 a owl:NamedIndividual, :Disease .
+
+res:assoc_ASSOC007846 a owl:NamedIndividual, :OffLabelUse .
+
+res:disease_21001550 a owl:NamedIndividual, :Disease .
+
+res:assoc_ASSOC007847 a owl:NamedIndividual, :OffLabelUse .
+
+res:assoc_ASSOC007863 a owl:NamedIndividual, :OffLabelUse .
+
+res:disease_21011259 a owl:NamedIndividual, :Disease .
+
+res:assoc_ASSOC008779 a owl:NamedIndividual, :Contraindication .
+
+res:disease_21000412 a owl:NamedIndividual, :Disease .
+
+res:assoc_ASSOC008780 a owl:NamedIndividual, :Contraindication .
+
+res:disease_21000413 a owl:NamedIndividual, :Disease .
+
+res:assoc_ASSOC008781 a owl:NamedIndividual, :Contraindication .
+
+res:disease_21000544 a owl:NamedIndividual, :Disease .
+
+res:assoc_ASSOC008782 a owl:NamedIndividual, :Indication .
+
+res:disease_21000594 a owl:NamedIndividual, :Disease .
+
+res:assoc_ASSOC008788 a owl:NamedIndividual, :OffLabelUse .
+
+res:disease_21000643 a owl:NamedIndividual, :Disease .
+
+res:assoc_ASSOC008800 a owl:NamedIndividual, :Contraindication .
+
+res:disease_21001002 a owl:NamedIndividual, :Disease .
+
+res:assoc_ASSOC008805 a owl:NamedIndividual, :Contraindication .
+
+res:assoc_ASSOC008809 a owl:NamedIndividual, :Contraindication .
+
+res:assoc_ASSOC008817 a owl:NamedIndividual, :OffLabelUse .
+
+res:disease_21002553 a owl:NamedIndividual, :Disease .
+
+res:assoc_ASSOC008825 a owl:NamedIndividual, :OffLabelUse .
+
+res:disease_21003147 a owl:NamedIndividual, :Disease .
+
+res:assoc_ASSOC008841 a owl:NamedIndividual, :Indication .
+
+res:disease_40248990 a owl:NamedIndividual, :Disease .
+
+res:assoc_ASSOC008844 a owl:NamedIndividual, :Indication .
+
+res:disease_40249729 a owl:NamedIndividual, :Disease .
+
+res:assoc_ASSOC012998 a owl:NamedIndividual, :Indication .
+
+res:disease_21000608 a owl:NamedIndividual, :Disease .
+
+res:assoc_ASSOC012999 a owl:NamedIndividual, :Contraindication .
+
+res:disease_21000723 a owl:NamedIndividual, :Disease .
+
+res:assoc_ASSOC013000 a owl:NamedIndividual, :Contraindication .
+
+res:assoc_ASSOC013001 a owl:NamedIndividual, :Indication .
+
+res:disease_21001992 a owl:NamedIndividual, :Disease .
+
+res:assoc_ASSOC013002 a owl:NamedIndividual, :Indication .
+
+res:disease_21001993 a owl:NamedIndividual, :Disease .
+
+res:assoc_ASSOC013011 a owl:NamedIndividual, :Contraindication .
+
+res:assoc_ASSOC013013 a owl:NamedIndividual, :OffLabelUse .
+
+res:disease_21002232 a owl:NamedIndividual, :Disease .
+
+res:assoc_ASSOC018858 a owl:NamedIndividual, :Contraindication .
+
+res:disease_21000480 a owl:NamedIndividual, :Disease .
+
+res:assoc_ASSOC018859 a owl:NamedIndividual, :Contraindication .
+
+res:disease_21000496 a owl:NamedIndividual, :Disease .
+
+res:assoc_ASSOC018860 a owl:NamedIndividual, :Contraindication .
+
+res:disease_21000746 a owl:NamedIndividual, :Disease .
+
+res:assoc_ASSOC018870 a owl:NamedIndividual, :Contraindication .
+
+res:assoc_ASSOC018873 a owl:NamedIndividual, :Contraindication .
+
+res:assoc_ASSOC018876 a owl:NamedIndividual, :Indication .
+
+res:disease_21002383 a owl:NamedIndividual, :Disease .
+
+res:assoc_ASSOC018884 a owl:NamedIndividual, :Indication .
+
+res:disease_21013784 a owl:NamedIndividual, :Disease .
+
+res:assoc_ASSOC019993 a owl:NamedIndividual, :Contraindication .
+
+res:disease_21000584 a owl:NamedIndividual, :Disease .
+
+res:assoc_ASSOC019994 a owl:NamedIndividual, :Indication .
+
+res:assoc_ASSOC019995 a owl:NamedIndividual, :Indication .
+
+res:disease_21000702 a owl:NamedIndividual, :Disease .
+
+res:assoc_ASSOC019996 a owl:NamedIndividual, :Indication .
+
+res:disease_21000703 a owl:NamedIndividual, :Disease .
+
+res:assoc_ASSOC019999 a owl:NamedIndividual, :Contraindication .
+
+res:disease_21000996 a owl:NamedIndividual, :Disease .
+
+res:assoc_ASSOC020000 a owl:NamedIndividual, :Contraindication .
+
+res:disease_21001161 a owl:NamedIndividual, :Disease .
+
+res:assoc_ASSOC020010 a owl:NamedIndividual, :Contraindication .
+
+res:assoc_ASSOC020019 a owl:NamedIndividual, :OffLabelUse .
+
+res:disease_21006489 a owl:NamedIndividual, :Disease .
+
+res:assoc_ASSOC034134 a owl:NamedIndividual, :Indication .
+
+res:disease_40249204 a owl:NamedIndividual, :Disease .
+
+res:assoc_ASSOC034135 a owl:NamedIndividual, :Indication .
+
+res:disease_40249213 a owl:NamedIndividual, :Disease .
+
+res:assoc_ASSOC034136 a owl:NamedIndividual, :Indication .
+
+res:disease_40249214 a owl:NamedIndividual, :Disease .
+
+res:assoc_ASSOC037169 a owl:NamedIndividual, :Indication .
+
+res:disease_21000225 a owl:NamedIndividual, :Disease .
+
+res:assoc_ASSOC037170 a owl:NamedIndividual, :Indication .
+
+res:disease_21000226 a owl:NamedIndividual, :Disease .
+
+res:assoc_ASSOC037171 a owl:NamedIndividual, :Indication .
+
+res:disease_21000229 a owl:NamedIndividual, :Disease .
+
+res:assoc_ASSOC037177 a owl:NamedIndividual, :OffLabelUse .
+
+res:disease_21000436 a owl:NamedIndividual, :Disease .
+
+res:assoc_ASSOC037178 a owl:NamedIndividual, :Contraindication .
+
+res:disease_21000697 a owl:NamedIndividual, :Disease .
+
+res:assoc_ASSOC037179 a owl:NamedIndividual, :Contraindication .
+
+res:disease_21000773 a owl:NamedIndividual, :Disease .
+
+res:assoc_ASSOC037180 a owl:NamedIndividual, :OffLabelUse .
+
+res:disease_21000774 a owl:NamedIndividual, :Disease .
+
+res:assoc_ASSOC037181 a owl:NamedIndividual, :Contraindication .
+
+res:disease_21000842 a owl:NamedIndividual, :Disease .
+
+res:assoc_ASSOC037191 a owl:NamedIndividual, :OffLabelUse .
+
+res:disease_21001670 a owl:NamedIndividual, :Disease .
+
+res:assoc_ASSOC037854 a owl:NamedIndividual, :Indication .
+
+res:disease_21000010 a owl:NamedIndividual, :Disease .
+
+res:assoc_ASSOC037855 a owl:NamedIndividual, :Indication .
+
+res:disease_21000012 a owl:NamedIndividual, :Disease .
+
+res:assoc_ASSOC037856 a owl:NamedIndividual, :Indication .
+
+res:disease_21000025 a owl:NamedIndividual, :Disease .
+
+res:assoc_ASSOC037857 a owl:NamedIndividual, :Contraindication .
+
+res:disease_21000026 a owl:NamedIndividual, :Disease .
+
+res:assoc_ASSOC037858 a owl:NamedIndividual, :OffLabelUse .
+
+res:disease_21000035 a owl:NamedIndividual, :Disease .
+
+res:assoc_ASSOC037860 a owl:NamedIndividual, :OffLabelUse .
+
+res:disease_21000051 a owl:NamedIndividual, :Disease .
+
+res:assoc_ASSOC037861 a owl:NamedIndividual, :OffLabelUse .
+
+res:disease_21000052 a owl:NamedIndividual, :Disease .
+
+res:assoc_ASSOC037872 a owl:NamedIndividual, :Contraindication .
+
+res:disease_21000756 a owl:NamedIndividual, :Disease .
+
+res:assoc_ASSOC037873 a owl:NamedIndividual, :Contraindication .
+
+res:disease_21001105 a owl:NamedIndividual, :Disease .
+
+res:assoc_ASSOC040546 a owl:NamedIndividual, :Indication .
+
+res:disease_21000090 a owl:NamedIndividual, :Disease .
+
+res:assoc_ASSOC040547 a owl:NamedIndividual, :Contraindication .
+
+res:disease_21000712 a owl:NamedIndividual, :Disease .
+
+res:assoc_ASSOC040548 a owl:NamedIndividual, :Indication .
+
+res:disease_21000919 a owl:NamedIndividual, :Disease .
+
+res:assoc_ASSOC040549 a owl:NamedIndividual, :Indication .
+
+res:disease_21000923 a owl:NamedIndividual, :Disease .
+
+res:assoc_ASSOC040552 a owl:NamedIndividual, :OffLabelUse .
+
+res:disease_21000970 a owl:NamedIndividual, :Disease .
+
+res:assoc_ASSOC040553 a owl:NamedIndividual, :Contraindication .
+
+res:assoc_ASSOC040554 a owl:NamedIndividual, :Contraindication .
+
+res:disease_21001005 a owl:NamedIndividual, :Disease .
+
+res:assoc_ASSOC040564 a owl:NamedIndividual, :Contraindication .
+
+res:assoc_ASSOC040573 a owl:NamedIndividual, :OffLabelUse .
+
+res:disease_21013911 a owl:NamedIndividual, :Disease .
+
+res:drug_1423 a owl:NamedIndividual, :HighRiskApprovedDrug, :Drug, :SmallMoleculeDrug .
+
+res:signal_SIG002946 a owl:NamedIndividual, :StrongAdverseSignal, :AdverseSignal .
+
+res:signal_SIG002953 a owl:NamedIndividual, :StrongAdverseSignal, :AdverseSignal .
+
+res:signal_SIG002956 a owl:NamedIndividual, :StrongAdverseSignal, :AdverseSignal .
+
+res:target_381 a owl:NamedIndividual, :Target .
+
+res:target_382 a owl:NamedIndividual, :Target .
+
+res:target_383 a owl:NamedIndividual, :Target .
+
+res:drug_1610 a owl:NamedIndividual, :HighRiskApprovedDrug, :Drug, :SmallMoleculeDrug .
+
+res:signal_SIG004379 a owl:NamedIndividual, :StrongAdverseSignal, :AdverseSignal .
+
+res:signal_SIG004381 a owl:NamedIndividual, :StrongAdverseSignal, :AdverseSignal .
+
+res:signal_SIG004387 a owl:NamedIndividual, :StrongAdverseSignal, :AdverseSignal .
+
+res:target_385 a owl:NamedIndividual, :Target .
+
+res:drug_1725 a owl:NamedIndividual, :HighRiskApprovedDrug, :Drug, :SmallMoleculeDrug .
+
+res:signal_SIG005028 a owl:NamedIndividual, :StrongAdverseSignal, :AdverseSignal .
+
+res:signal_SIG005030 a owl:NamedIndividual, :StrongAdverseSignal, :AdverseSignal .
+
+res:signal_SIG005037 a owl:NamedIndividual, :StrongAdverseSignal, :AdverseSignal .
+
+res:target_2815 a owl:NamedIndividual, :ProteinComplexTarget, :Target .
+
+res:drug_1990 a owl:NamedIndividual, :HighRiskApprovedDrug, :Drug, :SmallMoleculeDrug .
+
+res:signal_SIG007101 a owl:NamedIndividual, :StrongAdverseSignal, :AdverseSignal .
+
+res:signal_SIG007102 a owl:NamedIndividual, :StrongAdverseSignal, :AdverseSignal .
+
+res:signal_SIG007112 a owl:NamedIndividual, :StrongAdverseSignal, :AdverseSignal .
+
+res:target_2752 a owl:NamedIndividual, :ProteinComplexTarget, :Target .
+
+res:drug_2441 a owl:NamedIndividual, :HighRiskApprovedDrug, :Drug, :SmallMoleculeDrug .
+
+res:signal_SIG010012 a owl:NamedIndividual, :StrongAdverseSignal, :AdverseSignal .
+
+res:signal_SIG010023 a owl:NamedIndividual, :StrongAdverseSignal, :AdverseSignal .
+
+res:signal_SIG010027 a owl:NamedIndividual, :StrongAdverseSignal, :AdverseSignal .
+
+res:target_411 a owl:NamedIndividual, :Target .
+
+res:drug_257 a owl:NamedIndividual, :HighRiskApprovedDrug, :Drug, :SmallMoleculeDrug .
+
+res:signal_SIG010691 a owl:NamedIndividual, :StrongAdverseSignal, :AdverseSignal .
+
+res:signal_SIG010696 a owl:NamedIndividual, :StrongAdverseSignal, :AdverseSignal .
+
+res:signal_SIG010706 a owl:NamedIndividual, :StrongAdverseSignal, :AdverseSignal .
+
+res:target_238 a owl:NamedIndividual, :Target .
+
+res:drug_4979 a owl:NamedIndividual, :Drug, :NonSmallMoleculeDrug .
+
+res:signal_SIG022965 a owl:NamedIndividual, :StrongAdverseSignal, :AdverseSignal .
+
+res:signal_SIG022972 a owl:NamedIndividual, :StrongAdverseSignal, :AdverseSignal .
+
+res:signal_SIG022976 a owl:NamedIndividual, :StrongAdverseSignal, :AdverseSignal .
+
+res:target_546 a owl:NamedIndividual, :Target .
+
+res:drug_607 a owl:NamedIndividual, :HighRiskApprovedDrug, :Drug, :SmallMoleculeDrug .
+
+res:signal_SIG029116 a owl:NamedIndividual, :AdverseSignal .
+
+res:signal_SIG029117 a owl:NamedIndividual, :AdverseSignal .
+
+res:signal_SIG029122 a owl:NamedIndividual, :StrongAdverseSignal, :AdverseSignal .
+
+res:signal_SIG029131 a owl:NamedIndividual, :StrongAdverseSignal, :AdverseSignal .
+
+res:signal_SIG029135 a owl:NamedIndividual, :StrongAdverseSignal, :AdverseSignal .
+
+res:target_5515 a owl:NamedIndividual, :Target .
+
+res:drug_659 a owl:NamedIndividual, :HighRiskApprovedDrug, :Drug, :SmallMoleculeDrug .
+
+res:signal_SIG029443 a owl:NamedIndividual, :StrongAdverseSignal, :AdverseSignal .
+
+res:signal_SIG029454 a owl:NamedIndividual, :StrongAdverseSignal, :AdverseSignal .
+
+res:signal_SIG029459 a owl:NamedIndividual, :StrongAdverseSignal, :AdverseSignal .
+
+res:target_166 a owl:NamedIndividual, :Target .
+
+res:drug_852 a owl:NamedIndividual, :HighRiskApprovedDrug, :Drug, :SmallMoleculeDrug .
+
+res:signal_SIG031113 a owl:NamedIndividual, :StrongAdverseSignal, :AdverseSignal .
+
+res:signal_SIG031115 a owl:NamedIndividual, :StrongAdverseSignal, :AdverseSignal .
+
+res:signal_SIG031127 a owl:NamedIndividual, :StrongAdverseSignal, :AdverseSignal .
+
+res:target_2731 a owl:NamedIndividual, :ProteinComplexTarget, :Target .
+
+res:target_2732 a owl:NamedIndividual, :ProteinComplexTarget, :Target .
+
+res:target_2733 a owl:NamedIndividual, :ProteinComplexTarget, :Target .
+
+res:pathway_R-HSA-1227986 a owl:NamedIndividual, :Pathway .
+
+res:pathway_R-HSA-1236394 a owl:NamedIndividual, :Pathway .
+
+res:pathway_R-HSA-1250196 a owl:NamedIndividual, :Pathway .
+
+res:pathway_R-HSA-1251932 a owl:NamedIndividual, :Pathway .
+
+res:pathway_R-HSA-1257604 a owl:NamedIndividual, :Pathway .
+
+res:pathway_R-HSA-1433557 a owl:NamedIndividual, :Pathway .
+
+res:pathway_R-HSA-1433559 a owl:NamedIndividual, :Pathway .
+
+res:pathway_R-HSA-186763 a owl:NamedIndividual, :Pathway .
+
+res:pathway_R-HSA-186797 a owl:NamedIndividual, :Pathway .
+
+res:pathway_R-HSA-2029482 a owl:NamedIndividual, :Pathway .
+
+res:pathway_R-HSA-375276 a owl:NamedIndividual, :Pathway .
+
+res:pathway_R-HSA-416476 a owl:NamedIndividual, :Pathway .
+
+res:pathway_R-HSA-418457 a owl:NamedIndividual, :Pathway .
+
+res:pathway_R-HSA-428890 a owl:NamedIndividual, :Pathway .
+
+res:pathway_R-HSA-445355 a owl:NamedIndividual, :Pathway .
+
+res:pathway_R-HSA-525793 a owl:NamedIndividual, :Pathway .
+
+res:pathway_R-HSA-5628897 a owl:NamedIndividual, :Pathway .
+
+res:pathway_R-HSA-611105 a owl:NamedIndividual, :Pathway .
+
+res:pathway_R-HSA-6799198 a owl:NamedIndividual, :Pathway .
+
+res:pathway_R-HSA-77289 a owl:NamedIndividual, :Pathway .
+
+res:pathway_R-HSA-8856825 a owl:NamedIndividual, :Pathway .
+
+res:pathway_R-HSA-9013422 a owl:NamedIndividual, :Pathway .
+
+res:pathway_R-HSA-936837 a owl:NamedIndividual, :Pathway .
+
+res:pathway_R-HSA-9619665 a owl:NamedIndividual, :Pathway .
+
+res:pathway_R-HSA-9638771 a owl:NamedIndividual, :Pathway .
+
+res:pathway_R-HSA-9707564 a owl:NamedIndividual, :Pathway .
+
+res:pathway_R-HSA-977443 a owl:NamedIndividual, :Pathway .
+
+res:pathway_R-HSA-9913143 a owl:NamedIndividual, :Pathway .
+
+res:protein_O00217 a owl:NamedIndividual, :Protein .
+
+res:protein_O00483 a owl:NamedIndividual, :Protein .
+
+res:protein_O14561 a owl:NamedIndividual, :Protein .
+
+res:protein_O15239 a owl:NamedIndividual, :Protein .
+
+res:protein_O43181 a owl:NamedIndividual, :Protein .
+
+res:protein_O76074 a owl:NamedIndividual, :Protein .
+
+res:protein_P00519 a owl:NamedIndividual, :Protein .
+
+res:protein_P04035 a owl:NamedIndividual, :Protein .
+
+res:protein_P04626 a owl:NamedIndividual, :Protein .
+
+res:protein_P09619 a owl:NamedIndividual, :Protein .
+
+res:protein_P0AES4 a owl:NamedIndividual, :Protein .
+
+res:protein_P10721 a owl:NamedIndividual, :Protein .
+
+res:protein_P14867 a owl:NamedIndividual, :Protein .
+
+res:protein_P18507 a owl:NamedIndividual, :Protein .
+
+res:protein_P20648 a owl:NamedIndividual, :Protein .
+
+res:protein_P28472 a owl:NamedIndividual, :Protein .
+
+res:protein_P30556 a owl:NamedIndividual, :Protein .
+
+res:protein_P34903 a owl:NamedIndividual, :Protein .
+
+res:protein_P47869 a owl:NamedIndividual, :Protein .
+
+res:protein_P47870 a owl:NamedIndividual, :Protein .
+
+res:protein_P51164 a owl:NamedIndividual, :Protein .
+
+res:protein_Q9N6S8 a owl:NamedIndividual, :Protein .
+
+_:node2 rdf:first :ApprovedDrug;
+  rdf:rest _:node3 .
+
+_:node3 rdf:first _:node4;
+  rdf:rest _:node5 .
+
+_:node5 rdf:first _:node6;
+  rdf:rest rdf:nil .
+
+_:node8 rdf:first :Target;
+  rdf:rest _:node9 .
+
+_:node9 rdf:first _:node10;
+  rdf:rest rdf:nil .
+
+_:node12 rdf:first :ApprovedDrug;
+  rdf:rest _:node13 .
+
+_:node13 rdf:first _:node14;
+  rdf:rest _:node15 .
+
+_:node15 rdf:first _:node16;
+  rdf:rest rdf:nil .
+
+_:node17 rdf:first :targets;
+  rdf:rest _:node18 .
+
+_:node18 rdf:first :hasComponent;
+  rdf:rest _:node19 .
+
+_:node19 rdf:first :participatesIn;
+  rdf:rest rdf:nil .
+
+_:node22 rdf:first :Drug;
+  rdf:rest _:node23 .
+
+_:node23 rdf:first _:node24;
+  rdf:rest rdf:nil .
+
+_:node26 rdf:first :AdverseSignal;
+  rdf:rest _:node27 .
+
+_:node27 rdf:first _:node28;
+  rdf:rest rdf:nil .
+
+_:node30 rdf:first _:node31;
+  rdf:rest rdf:nil .
+
+_:node33 rdf:first :Drug;
+  rdf:rest _:node34 .
+
+_:node34 rdf:first _:node35;
+  rdf:rest rdf:nil .
+
+_:node42 rdf:first _:node43;
+  rdf:rest rdf:nil .
+
+_:node46 rdf:first :uniprotAccession;
+  rdf:rest rdf:nil .
+
+_:node49 rdf:first _:node50;
+  rdf:rest rdf:nil .
+
+_:node52 rdf:first :Drug;
+  rdf:rest _:node53 .
+
+_:node53 rdf:first :Disease;
+  rdf:rest _:node54 .
+
+_:node54 rdf:first :DrugDiseaseAssociation;
+  rdf:rest _:node55 .
+
+_:node55 rdf:first :AdverseEvent;
+  rdf:rest _:node56 .
+
+_:node56 rdf:first :AdverseSignal;
+  rdf:rest _:node57 .
+
+_:node57 rdf:first :RegulatoryApproval;
+  rdf:rest _:node58 .
+
+_:node58 rdf:first :RegulatoryAgency;
+  rdf:rest _:node59 .
+
+_:node59 rdf:first :Target;
+  rdf:rest _:node60 .
+
+_:node60 rdf:first :Protein;
+  rdf:rest _:node61 .
+
+_:node61 rdf:first :Pathway;
+  rdf:rest rdf:nil .
+
+_:node63 rdf:first :SmallMoleculeDrug;
+  rdf:rest _:node64 .
+
+_:node64 rdf:first :NonSmallMoleculeDrug;
+  rdf:rest rdf:nil .
+
+_:node66 rdf:first :Indication;
+  rdf:rest _:node67 .
+
+_:node67 rdf:first :Contraindication;
+  rdf:rest _:node68 .
+
+_:node68 rdf:first :OffLabelUse;
+  rdf:rest rdf:nil .
+
+_:node70 rdf:rest _:node71 .
+
+_:node71 rdf:rest _:node72 .
+
+_:node72 rdf:rest _:node73 .
+
+_:node73 rdf:rest _:node74 .
+
+_:node74 rdf:rest _:node75 .
+
+_:node75 rdf:rest _:node76 .
+
+_:node76 rdf:rest _:node77 .
+
+_:node77 rdf:rest _:node78 .
+
+_:node78 rdf:rest _:node79 .
+
+_:node79 rdf:rest rdf:nil .
+
+_:node81 rdf:rest _:node82 .
+
+_:node82 rdf:rest _:node83 .
+
+_:node83 rdf:rest _:node84 .
+
+_:node84 rdf:rest _:node85 .
+
+_:node85 rdf:rest _:node86 .
+
+_:node86 rdf:rest _:node87 .
+
+_:node87 rdf:rest _:node88 .
+
+_:node88 rdf:rest _:node89 .
+
+_:node89 rdf:rest _:node90 .
+
+_:node90 rdf:rest _:node91 .
+
+_:node91 rdf:rest _:node92 .
+
+_:node92 rdf:rest _:node93 .
+
+_:node93 rdf:rest _:node94 .
+
+_:node94 rdf:rest rdf:nil .
+
+_:node96 rdf:rest _:node97 .
+
+_:node97 rdf:rest _:node98 .
+
+_:node98 rdf:rest _:node99 .
+
+_:node99 rdf:rest _:node100 .
+
+_:node100 rdf:rest _:node101 .
+
+_:node101 rdf:rest _:node102 .
+
+_:node102 rdf:rest _:node103 .
+
+_:node103 rdf:rest _:node104 .
+
+_:node104 rdf:rest _:node105 .
+
+_:node105 rdf:rest _:node106 .
+
+_:node106 rdf:rest _:node107 .
+
+_:node107 rdf:rest _:node108 .
+
+_:node108 rdf:rest _:node109 .
+
+_:node109 rdf:rest _:node110 .
+
+_:node110 rdf:rest _:node111 .
+
+_:node111 rdf:rest _:node112 .
+
+_:node112 rdf:rest _:node113 .
+
+_:node113 rdf:rest _:node114 .
+
+_:node114 rdf:rest _:node115 .
+
+_:node115 rdf:rest _:node116 .
+
+_:node116 rdf:rest _:node117 .
+
+_:node117 rdf:rest rdf:nil .
+
+:hasApproval rdfs:comment "Links a drug to a unique regulatory approval record."@en;
+  rdfs:label "has approval"@en .
+
+:molecularWeight rdfs:comment "Molecular weight of a drug in Daltons."@en;
+  rdfs:label "molecular weight"@en .
+
+:reportsEvent rdfs:comment "Links an adverse signal to the single reported MedDRA adverse event."@en;
+  rdfs:label "reports event"@en .
+
+:AdverseEvent rdfs:comment "A standardized MedDRA adverse drug reaction term."@en;
+  rdfs:label "Adverse Event"@en .
+
+:uniprotAccession rdfs:comment "Unique UniProtKB accession identifier of a protein."@en;
+  rdfs:label "UniProt accession"@en .
+
+:HighRiskApprovedDrug rdfs:label "High-Risk Approved Drug"@en .
+
+:ApprovedDrug rdfs:label "Approved Drug"@en .
+
+:hasAssociation rdfs:label "has association"@en .
+
+:Contraindication rdfs:label "Contraindication"@en .
+
+:hasAdverseSignal rdfs:label "has adverse signal"@en .
+
+:StrongAdverseSignal rdfs:label "Strong Adverse Signal"@en .
+
+:ProteinComplexTarget rdfs:label "Protein Complex Target"@en .
+
+:Target rdfs:label "Pharmacological Target"@en .
+
+:Protein rdfs:label "Protein"@en .
+
+:hasComponent rdfs:label "has component"@en .
+
+:RepurposedApprovedDrug rdfs:label "Repurposed Approved Drug"@en .
+
+:Indication rdfs:label "Approved Indication"@en .
+
+:OffLabelUse rdfs:label "Off-Label Use"@en .
+
+:affectsPathway rdfs:label "affects pathway"@en .
+
+:Drug rdfs:label "Drug"@en .
+
+:Pathway rdfs:label "Reactome Pathway"@en .
+
+:targets rdfs:label "targets"@en .
+
+:participatesIn rdfs:label "participates in"@en .
+
+:approvalDate rdfs:label "approval date"@en .
+
+:RegulatoryApproval rdfs:label "Regulatory Approval"@en .
+
+:NonSmallMoleculeDrug rdfs:label "Non-Small Molecule Drug"@en .
+
+:smiles rdfs:label "SMILES"@en .
+
+:SmallMoleculeDrug rdfs:label "Small Molecule Drug"@en .
+
+:AdverseSignal rdfs:label "Adverse Signal"@en .
+
+:llrScore rdfs:label "LLR score"@en .
+
+:approvedBy rdfs:label "approved by"@en .
+
+:RegulatoryAgency rdfs:label "Regulatory Agency"@en .
+
+:forDisease rdfs:label "for disease"@en .
+
+:DrugDiseaseAssociation rdfs:label "Drug-Disease Association"@en .
+
+:Disease rdfs:label "Disease"@en .
+
+res:ae_10003246 rdfs:label "Arthritis"@en .
+
+res:ae_10004146 rdfs:label "Basal cell carcinoma"@en .
+
+res:ae_10010144 rdfs:label "Completed suicide"@en .
+
+res:ae_10011906 rdfs:label "Death"@en .
+
+res:ae_10013654 rdfs:label "Drug abuse"@en .
+
+res:ae_10013700 rdfs:label "Drug hypersensitivity"@en .
+
+res:ae_10013968 rdfs:label "Dyspnoea"@en .
+
+res:ae_10019717 rdfs:label "Hepatitis"@en .
+
+res:ae_10020993 rdfs:label "Hypoglycaemia"@en .
+
+res:ae_10021027 rdfs:label "Hypomagnesaemia"@en .
+
+res:ae_10023676 rdfs:label "Lactic acidosis"@en .
+
+res:ae_10028411 rdfs:label "Myalgia"@en .
+
+res:ae_10028584 rdfs:label "Myelosuppression"@en .
+
+res:ae_10034280 rdfs:label "Pemphigus"@en .
+
+res:ae_10039020 rdfs:label "Rhabdomyolysis"@en .
+
+res:ae_10039163 rdfs:label "Right ventricular failure"@en .
+
+res:ae_10042868 rdfs:label "Synovitis"@en .
+
+res:ae_10043255 rdfs:label "Tendonitis"@en .
+
+res:ae_10050282 rdfs:label "Blast crisis in myelogenous leukaemia"@en .
+
+res:ae_10050528 rdfs:label "Ejection fraction decreased"@en .
+
+res:ae_10053762 rdfs:label "Off label use"@en .
+
+res:ae_10059866 rdfs:label "Drug resistance"@en .
+
+res:ae_10061194 rdfs:label "Hand deformity"@en .
+
+res:ae_10061818 rdfs:label "Disease progression"@en .
+
+res:ae_10064848 rdfs:label "Chronic kidney disease"@en .
+
+res:ae_10064911 rdfs:label "Pulmonary arterial hypertension"@en .
+
+res:ae_10066371 rdfs:label "Tendon pain"@en .
+
+res:ae_10066901 rdfs:label "Treatment failure"@en .
+
+res:ae_10069339 rdfs:label "Acute kidney injury"@en .
+
+res:ae_10070863 rdfs:label "Toxicity to various agents"@en .
+
+res:ae_10083073 rdfs:label "Immune-mediated myositis"@en .
+
+res:agency_ema rdfs:label "EMA"@en .
+
+res:agency_fda rdfs:label "FDA"@en .
+
+res:agency_pmda rdfs:label "PMDA"@en .
+
+res:disease_21000477 rdfs:label "Systemic mast cell disease"@en .
+
+res:disease_21000489 rdfs:label "Blastic phase chronic myeloid leukemia"@en .
+
+res:disease_21000490 rdfs:label "Chronic Myelocytic Leukemia Accelerated Phase"@en .
+
+res:disease_21000604 rdfs:label "Diabetes mellitus"@en .
+
+res:disease_21000725 rdfs:label "Hypophosphatemia"@en .
+
+res:disease_21000750 rdfs:label "Body fluid retention"@en .
+
+res:disease_21001432 rdfs:label "Hypertensive disorder"@en .
+
+res:disease_21001578 rdfs:label "Chronic heart failure"@en .
+
+res:disease_21002196 rdfs:label "Hepatic failure"@en .
+
+res:disease_21000007 rdfs:label "Sympathectomy"@en .
+
+res:disease_21000599 rdfs:label "Diabetic renal disease"@en .
+
+res:disease_21000609 rdfs:label "Hyperparathyroidism"@en .
+
+res:disease_21000701 rdfs:label "Hypercholesterolemia"@en .
+
+res:disease_21001435 rdfs:label "Hypertensive urgency"@en .
+
+res:disease_21001550 rdfs:label "Atrial fibrillation"@en .
+
+res:disease_21011259 rdfs:label "Nondiabetic Proteinuric Nephropathy"@en .
+
+res:disease_21000412 rdfs:label "Infectious disease"@en .
+
+res:disease_21000413 rdfs:label "Acute infectious disease"@en .
+
+res:disease_21000544 rdfs:label "Malignant tumor of urinary bladder"@en .
+
+res:disease_21000594 rdfs:label "Diabetes mellitus type 2"@en .
+
+res:disease_21000643 rdfs:label "Polycystic ovaries"@en .
+
+res:disease_21001002 rdfs:label "Alcohol intoxication"@en .
+
+res:disease_21002553 rdfs:label "Gestational diabetes mellitus"@en .
+
+res:disease_21003147 rdfs:label "Weight loss"@en .
+
+res:disease_40248990 rdfs:label "Treatment Refractory Type 2 Diabetes Mellitus"@en .
+
+res:disease_40249729 rdfs:label "Controlled ovarian stimulation"@en .
+
+res:disease_21000608 rdfs:label "Zollinger-Ellison syndrome"@en .
+
+res:disease_21000723 rdfs:label "Hypomagnesemia"@en .
+
+res:disease_21001992 rdfs:label "Peptic reflux disease"@en .
+
+res:disease_21001993 rdfs:label "Erosive esophagitis"@en .
+
+res:disease_21002232 rdfs:label "Upper gastrointestinal hemorrhage"@en .
+
+res:disease_21000480 rdfs:label "Multiple myeloma"@en .
+
+res:disease_21000496 rdfs:label "Leukemia, disease"@en .
+
+res:disease_21000746 rdfs:label "Dehydration"@en .
+
+res:disease_21002383 rdfs:label "Impotence"@en .
+
+res:disease_21013784 rdfs:label "Pulmonary arterial hypertension"@en .
+
+res:disease_21000584 rdfs:label "Hypothyroidism"@en .
+
+res:disease_21000702 rdfs:label "Familial hypercholesterolemia - homozygous"@en .
+
+res:disease_21000703 rdfs:label "Hypertriglyceridemia"@en .
+
+res:disease_21000996 rdfs:label "Alcoholism"@en .
+
+res:disease_21001161 rdfs:label "Disorder of muscle"@en .
+
+res:disease_21006489 rdfs:label "Prevention of Transient Ischemic Attacks"@en .
+
+res:disease_40249204 rdfs:label "HER2-positive carcinoma of breast"@en .
+
+res:disease_40249213 rdfs:label "Secondary malignant neoplasm of female breast"@en .
+
+res:disease_40249214 rdfs:label "Secondary malignant neoplasm of stomach"@en .
+
+res:disease_21000225 rdfs:label "Falciparum malaria"@en .
+
+res:disease_21000226 rdfs:label "Plasmodium Falciparum Malaria Prevention"@en .
+
+res:disease_21000229 rdfs:label "Vivax malaria"@en .
+
+res:disease_21000436 rdfs:label "Hypercalcemia associated with Sarcoidosis"@en .
+
+res:disease_21000697 rdfs:label "Deficiency of glucose-6-phosphate dehydrogenase"@en .
+
+res:disease_21000773 rdfs:label "Porphyria"@en .
+
+res:disease_21000774 rdfs:label "Porphyria cutanea tarda"@en .
+
+res:disease_21000842 rdfs:label "Anemia"@en .
+
+res:disease_21001670 rdfs:label "Vasculitis of the skin"@en .
+
+res:disease_21000010 rdfs:label "Typhoid fever"@en .
+
+res:disease_21000012 rdfs:label "Shigellosis"@en .
+
+res:disease_21000025 rdfs:label "Enteric campylobacteriosis"@en .
+
+res:disease_21000026 rdfs:label "Pseudomembranous enterocolitis"@en .
+
+res:disease_21000035 rdfs:label "Traveler's diarrhea"@en .
+
+res:disease_21000051 rdfs:label "Inhalational anthrax"@en .
+
+res:disease_21000052 rdfs:label "Gastrointestinal anthrax"@en .
+
+res:disease_21000756 rdfs:label "Hypokalemia"@en .
+
+res:disease_21001105 rdfs:label "Epilepsy"@en .
+
+res:disease_21000090 rdfs:label "Tetanus"@en .
+
+res:disease_21000712 rdfs:label "Hypoalbuminemia"@en .
+
+res:disease_21000919 rdfs:label "Alcohol withdrawal syndrome"@en .
+
+res:disease_21000923 rdfs:label "Alcohol withdrawal delirium"@en .
+
+res:disease_21000970 rdfs:label "Panic disorder"@en .
+
+res:disease_21001005 rdfs:label "Substance abuse"@en .
+
+res:disease_21013911 rdfs:label "Cocaine-Associated Acute Ischemic Heart Disease"@en .
+
+res:drug_1423 rdfs:label "imatinib"@en;
+  :hasAssociation res:assoc_ASSOC005619, res:assoc_ASSOC005620, res:assoc_ASSOC005621,
+    res:assoc_ASSOC005622, res:assoc_ASSOC005623, res:assoc_ASSOC005624, res:assoc_ASSOC005631,
+    res:assoc_ASSOC005635, res:assoc_ASSOC005642;
+  :hasAdverseSignal res:signal_SIG002946, res:signal_SIG002953, res:signal_SIG002956;
+  :targets res:target_381, res:target_382, res:target_383;
+  :smiles "CN1CCN(CC2=CC=C(C=C2)C(=O)NC2=CC=C(C)C(NC3=NC=CC(=N3)C3=CN=CC=C3)=C2)CC1";
+  :hasApproval res:approval_APR000253, res:approval_APR000254;
+  :molecularWeight 4.93615E2 .
+
+res:target_381 rdfs:label "Platelet-derived growth factor receptor beta"@en;
+  :hasComponent res:protein_P09619 .
+
+res:target_382 rdfs:label "Tyrosine-protein kinase ABL1"@en;
+  :hasComponent res:protein_P00519 .
+
+res:target_383 rdfs:label "Mast/stem cell growth factor receptor Kit"@en;
+  :hasComponent res:protein_P10721 .
+
+res:drug_1610 rdfs:label "losartan"@en;
+  :hasAssociation res:assoc_ASSOC007832, res:assoc_ASSOC007833, res:assoc_ASSOC007834,
+    res:assoc_ASSOC007835, res:assoc_ASSOC007836, res:assoc_ASSOC007844, res:assoc_ASSOC007845,
+    res:assoc_ASSOC007846, res:assoc_ASSOC007847, res:assoc_ASSOC007863;
+  :hasAdverseSignal res:signal_SIG004379, res:signal_SIG004381, res:signal_SIG004387;
+  :targets res:target_385;
+  :smiles "CCCCC1=NC(Cl)=C(CO)N1CC1=CC=C(C=C1)C1=C(C=CC=C1)C1=NN=NN1";
+  :hasApproval res:approval_APR000383;
+  :molecularWeight 4.2292E2 .
+
+res:target_385 rdfs:label "Type-1 angiotensin II receptor"@en;
+  :hasComponent res:protein_P30556 .
+
+res:drug_1725 rdfs:label "metformin"@en;
+  :hasAssociation res:assoc_ASSOC008779, res:assoc_ASSOC008780, res:assoc_ASSOC008781,
+    res:assoc_ASSOC008782, res:assoc_ASSOC008788, res:assoc_ASSOC008800, res:assoc_ASSOC008805,
+    res:assoc_ASSOC008809, res:assoc_ASSOC008817, res:assoc_ASSOC008825, res:assoc_ASSOC008841,
+    res:assoc_ASSOC008844;
+  :hasAdverseSignal res:signal_SIG005028, res:signal_SIG005030, res:signal_SIG005037;
+  :targets res:target_2815;
+  :smiles "CN(C)C(=N)NC(N)=N";
+  :hasApproval res:approval_APR000445, res:approval_APR000446, res:approval_APR000447;
+  :molecularWeight 1.29167E2 .
+
+res:target_2815 rdfs:label "Mitochondrial complex I (NADH dehydrogenase)"@en;
+  :hasComponent res:protein_O00217, res:protein_O00483, res:protein_O14561, res:protein_O15239,
+    res:protein_O43181 .
+
+res:drug_1990 rdfs:label "omeprazole"@en;
+  :hasAssociation res:assoc_ASSOC012998, res:assoc_ASSOC012999, res:assoc_ASSOC013000,
+    res:assoc_ASSOC013001, res:assoc_ASSOC013002, res:assoc_ASSOC013011, res:assoc_ASSOC013013;
+  :hasAdverseSignal res:signal_SIG007101, res:signal_SIG007102, res:signal_SIG007112;
+  :targets res:target_2752;
+  :smiles "COC1=CC2=C(C=C1)N=C(N2)S(=O)CC1=NC=C(C)C(OC)=C1C";
+  :hasApproval res:approval_APR000636;
+  :molecularWeight 3.4542E2 .
+
+res:target_2752 rdfs:label "Potassium-transporting ATPase"@en;
+  :hasComponent res:protein_P20648, res:protein_P51164 .
+
+res:drug_2441 rdfs:label "sildenafil"@en;
+  :hasAssociation res:assoc_ASSOC018858, res:assoc_ASSOC018859, res:assoc_ASSOC018860,
+    res:assoc_ASSOC018870, res:assoc_ASSOC018873, res:assoc_ASSOC018876, res:assoc_ASSOC018884;
+  :hasAdverseSignal res:signal_SIG010012, res:signal_SIG010023, res:signal_SIG010027;
+  :targets res:target_411;
+  :smiles "CCCC1=NN(C)C2=C1N=C(NC2=O)C1=CC(=CC=C1OCC)S(=O)(=O)N1CCN(C)CC1";
+  :hasApproval res:approval_APR000894, res:approval_APR000895;
+  :molecularWeight 4.7458E2 .
+
+res:target_411 rdfs:label "cGMP-specific 3',5'-cyclic phosphodiesterase"@en;
+  :hasComponent res:protein_O76074 .
+
+res:drug_257 rdfs:label "atorvastatin"@en;
+  :hasAssociation res:assoc_ASSOC019993, res:assoc_ASSOC019994, res:assoc_ASSOC019995,
+    res:assoc_ASSOC019996, res:assoc_ASSOC019999, res:assoc_ASSOC020000, res:assoc_ASSOC020010,
+    res:assoc_ASSOC020019;
+  :hasAdverseSignal res:signal_SIG010691, res:signal_SIG010696, res:signal_SIG010706;
+  :targets res:target_238;
+  :smiles "CC(C)C1=C(C(=O)NC2=CC=CC=C2)C(=C(N1CC[C@@H](O)C[C@@H](O)CC(O)=O)C1=CC=C(F)C=C1)C1=CC=CC=C1";
+  :hasApproval res:approval_APR000973;
+  :molecularWeight 5.5865E2 .
+
+res:target_238 rdfs:label "3-hydroxy-3-methylglutaryl-coenzyme A reductase"@en;
+  :hasComponent res:protein_P04035 .
+
+res:drug_4979 rdfs:label "trastuzumab"@en;
+  :hasAssociation res:assoc_ASSOC034134, res:assoc_ASSOC034135, res:assoc_ASSOC034136;
+  :hasAdverseSignal res:signal_SIG022965, res:signal_SIG022972, res:signal_SIG022976;
+  :targets res:target_546;
+  :hasApproval res:approval_APR002293, res:approval_APR002294, res:approval_APR002295 .
+
+res:target_546 rdfs:label "Receptor tyrosine-protein kinase erbB-2"@en;
+  :hasComponent res:protein_P04626 .
+
+res:drug_607 rdfs:label "chloroquine"@en;
+  :hasAssociation res:assoc_ASSOC037169, res:assoc_ASSOC037170, res:assoc_ASSOC037171,
+    res:assoc_ASSOC037177, res:assoc_ASSOC037178, res:assoc_ASSOC037179, res:assoc_ASSOC037180,
+    res:assoc_ASSOC037181, res:assoc_ASSOC037191;
+  :hasAdverseSignal res:signal_SIG029116, res:signal_SIG029117, res:signal_SIG029122,
+    res:signal_SIG029131, res:signal_SIG029135;
+  :targets res:target_5515;
+  :smiles "CCN(CC)CCCC(C)NC1=CC=NC2=CC(Cl)=CC=C12";
+  :hasApproval res:approval_APR003728;
+  :molecularWeight 3.1988E2 .
+
+res:target_5515 rdfs:label "Cysteine proteinase falcipain 2a"@en;
+  :hasComponent res:protein_Q9N6S8 .
+
+res:drug_659 rdfs:label "ciprofloxacin"@en;
+  :hasAssociation res:assoc_ASSOC037854, res:assoc_ASSOC037855, res:assoc_ASSOC037856,
+    res:assoc_ASSOC037857, res:assoc_ASSOC037858, res:assoc_ASSOC037860, res:assoc_ASSOC037861,
+    res:assoc_ASSOC037872, res:assoc_ASSOC037873;
+  :hasAdverseSignal res:signal_SIG029443, res:signal_SIG029454, res:signal_SIG029459;
+  :targets res:target_166;
+  :smiles "OC(=O)C1=CN(C2CC2)C2=CC(N3CCNCC3)=C(F)C=C2C1=O";
+  :hasApproval res:approval_APR003756;
+  :molecularWeight 3.31347E2 .
+
+res:target_166 rdfs:label "DNA gyrase subunit A"@en;
+  :hasComponent res:protein_P0AES4 .
+
+res:drug_852 rdfs:label "diazepam"@en;
+  :hasAssociation res:assoc_ASSOC040546, res:assoc_ASSOC040547, res:assoc_ASSOC040548,
+    res:assoc_ASSOC040549, res:assoc_ASSOC040552, res:assoc_ASSOC040553, res:assoc_ASSOC040554,
+    res:assoc_ASSOC040564, res:assoc_ASSOC040573;
+  :hasAdverseSignal res:signal_SIG031113, res:signal_SIG031115, res:signal_SIG031127;
+  :targets res:target_2731, res:target_2732, res:target_2733;
+  :smiles "CN1C2=CC=C(Cl)C=C2C(=NCC1=O)C1=CC=CC=C1";
+  :hasApproval res:approval_APR003879;
+  :molecularWeight 2.8474E2 .
+
+res:target_2731 rdfs:label "GABA-A receptor alpha-1/beta-2/gamma-2"@en;
+  :hasComponent res:protein_P14867, res:protein_P18507, res:protein_P47870 .
+
+res:target_2732 rdfs:label "GABA-A receptor alpha-2/beta-3/gamma-2"@en;
+  :hasComponent res:protein_P18507, res:protein_P28472, res:protein_P47869 .
+
+res:target_2733 rdfs:label "GABA-A receptor alpha-3/beta-3/gamma-2"@en;
+  :hasComponent res:protein_P18507, res:protein_P28472, res:protein_P34903 .
+
+res:pathway_R-HSA-1227986 rdfs:label "Signaling by ERBB2"@en .
+
+res:pathway_R-HSA-1236394 rdfs:label "Signaling by ERBB4"@en .
+
+res:pathway_R-HSA-1250196 rdfs:label "SHC1 events in ERBB2 signaling"@en .
+
+res:pathway_R-HSA-1251932 rdfs:label "PLCG1 events in ERBB2 signaling"@en .
+
+res:pathway_R-HSA-1257604 rdfs:label "PIP3 activates AKT signaling"@en .
+
+res:pathway_R-HSA-1433557 rdfs:label "Signaling by SCF-KIT"@en .
+
+res:pathway_R-HSA-1433559 rdfs:label "Regulation of KIT signaling"@en .
+
+res:pathway_R-HSA-186763 rdfs:label "Downstream signal transduction"@en .
+
+res:pathway_R-HSA-186797 rdfs:label "Signaling by PDGF"@en .
+
+res:pathway_R-HSA-2029482 rdfs:label "Regulation of actin dynamics for phagocytic cup formation"@en .
+
+res:pathway_R-HSA-375276 rdfs:label "Peptide ligand-binding receptors"@en .
+
+res:pathway_R-HSA-416476 rdfs:label "G alpha (q) signalling events"@en .
+
+res:pathway_R-HSA-418457 rdfs:label "cGMP effects"@en .
+
+res:pathway_R-HSA-428890 rdfs:label "Role of ABL in ROBO-SLIT signaling"@en .
+
+res:pathway_R-HSA-445355 rdfs:label "Smooth Muscle Contraction"@en .
+
+res:pathway_R-HSA-525793 rdfs:label "Myogenesis"@en .
+
+res:pathway_R-HSA-5628897 rdfs:label "TP53 Regulates Metabolic Genes"@en .
+
+res:pathway_R-HSA-611105 rdfs:label "Respiratory electron transport"@en .
+
+res:pathway_R-HSA-6799198 rdfs:label "Complex I biogenesis"@en .
+
+res:pathway_R-HSA-77289 rdfs:label "Mitochondrial Fatty Acid Beta-Oxidation"@en .
+
+res:pathway_R-HSA-8856825 rdfs:label "Cargo recognition for clathrin-mediated endocytosis"@en .
+
+res:pathway_R-HSA-9013422 rdfs:label "RHOBTB1 GTPase cycle"@en .
+
+res:pathway_R-HSA-936837 rdfs:label "Ion transport by P-type ATPases"@en .
+
+res:pathway_R-HSA-9619665 rdfs:label "EGR2 and SOX10-mediated initiation of Schwann cell myelination"@en .
+
+res:pathway_R-HSA-9638771 rdfs:label "Action of antimicrobials"@en .
+
+res:pathway_R-HSA-9707564 rdfs:label "Cytoprotection by HMOX1"@en .
+
+res:pathway_R-HSA-977443 rdfs:label "GABA receptor activation"@en .
+
+res:pathway_R-HSA-9913143 rdfs:label "Antimicrobial resistance"@en .
+
+res:protein_O00217 rdfs:label "NADH dehydrogenase [ubiquinone] iron-sulfur protein 8, mitochondrial (EC 7.1.1.2) (Complex I-23kD) (CI-23kD) (NADH-ubiquinone oxidoreductase 23 kDa subunit) (TYKY subunit)"@en;
+  :participatesIn res:pathway_R-HSA-611105, res:pathway_R-HSA-6799198;
+  :uniprotAccession "O00217" .
+
+res:protein_O00483 rdfs:label "Cytochrome c oxidase subunit FA4 (Complex I-MLRQ) (CI-MLRQ) (Cytochrome c oxidase subunit NDUFA4) (NADH-ubiquinone oxidoreductase MLRQ subunit)"@en;
+  :participatesIn res:pathway_R-HSA-5628897, res:pathway_R-HSA-611105, res:pathway_R-HSA-9707564;
+  :uniprotAccession "O00483" .
+
+res:protein_O14561 rdfs:label "Acyl carrier protein, mitochondrial (ACP) (CI-SDAP) (NADH-ubiquinone oxidoreductase 9.6 kDa subunit)"@en;
+  :participatesIn res:pathway_R-HSA-611105, res:pathway_R-HSA-6799198, res:pathway_R-HSA-77289;
+  :uniprotAccession "O14561" .
+
+res:protein_O15239 rdfs:label "NADH dehydrogenase [ubiquinone] 1 alpha subcomplex subunit 1 (Complex I-MWFE) (CI-MWFE) (NADH-ubiquinone oxidoreductase MWFE subunit)"@en;
+  :participatesIn res:pathway_R-HSA-611105, res:pathway_R-HSA-6799198;
+  :uniprotAccession "O15239" .
+
+res:protein_O43181 rdfs:label "NADH dehydrogenase [ubiquinone] iron-sulfur protein 4, mitochondrial (Complex I-18 kDa) (CI-18 kDa) (Complex I-AQDQ) (CI-AQDQ) (NADH-ubiquinone oxidoreductase 18 kDa subunit)"@en;
+  :participatesIn res:pathway_R-HSA-611105, res:pathway_R-HSA-6799198;
+  :uniprotAccession "O43181" .
+
+res:protein_O76074 rdfs:label "cGMP-specific 3',5'-cyclic phosphodiesterase (EC 3.1.4.35) (cGMP-binding cGMP-specific phosphodiesterase) (CGB-PDE)"@en;
+  :participatesIn res:pathway_R-HSA-418457, res:pathway_R-HSA-445355, res:pathway_R-HSA-9013422;
+  :uniprotAccession "O76074" .
+
+res:protein_P00519 rdfs:label "Tyrosine-protein kinase ABL1 (EC 2.7.10.2) (Abelson murine leukemia viral oncogene homolog 1) (Abelson tyrosine-protein kinase 1) (Proto-oncogene c-Abl) (p150)"@en;
+  :participatesIn res:pathway_R-HSA-2029482, res:pathway_R-HSA-428890, res:pathway_R-HSA-525793;
+  :uniprotAccession "P00519" .
+
+res:protein_P04035 rdfs:label "3-hydroxy-3-methylglutaryl-coenzyme A reductase (HMG-CoA reductase) (EC 1.1.1.34)"@en;
+  :participatesIn res:pathway_R-HSA-9619665;
+  :uniprotAccession "P04035" .
+
+res:protein_P04626 rdfs:label "Receptor tyrosine-protein kinase erbB-2 (EC 2.7.10.1) (Metastatic lymph node gene 19 protein) (MLN 19) (Proto-oncogene Neu) (Proto-oncogene c-ErbB-2) (Tyrosine kinase-type cell surface receptor HER2) (p185erbB2) (CD antigen CD340)"@en;
+  :participatesIn res:pathway_R-HSA-1227986, res:pathway_R-HSA-1250196, res:pathway_R-HSA-1251932;
+  :uniprotAccession "P04626" .
+
+res:protein_P09619 rdfs:label "Platelet-derived growth factor receptor beta (PDGF-R-beta) (PDGFR-beta) (EC 2.7.10.1) (Beta platelet-derived growth factor receptor) (Beta-type platelet-derived growth factor receptor) (CD140 antigen-like family member B) (Platelet-derived growth factor receptor 1) (PDGFR-1) (CD antigen CD140b)"@en;
+  :participatesIn res:pathway_R-HSA-1257604, res:pathway_R-HSA-186763, res:pathway_R-HSA-186797;
+  :uniprotAccession "P09619" .
+
+res:protein_P0AES4 rdfs:label "DNA gyrase subunit A (EC 5.6.2.2)"@en;
+  :participatesIn res:pathway_R-HSA-9638771, res:pathway_R-HSA-9913143;
+  :uniprotAccession "P0AES4" .
+
+res:protein_P10721 rdfs:label "Mast/stem cell growth factor receptor Kit (SCFR) (EC 2.7.10.1) (Piebald trait protein) (PBT) (Proto-oncogene c-Kit) (Tyrosine-protein kinase Kit) (p145 c-kit) (v-kit Hardy-Zuckerman 4 feline sarcoma viral oncogene homolog) (CD antigen CD117)"@en;
+  :participatesIn res:pathway_R-HSA-1257604, res:pathway_R-HSA-1433557, res:pathway_R-HSA-1433559;
+  :uniprotAccession "P10721" .
+
+res:protein_P14867 rdfs:label "Gamma-aminobutyric acid receptor subunit alpha-1 (GABA(A) receptor subunit alpha-1) (GABAAR subunit alpha-1)"@en;
+  :participatesIn res:pathway_R-HSA-1236394, res:pathway_R-HSA-977443;
+  :uniprotAccession "P14867" .
+
+res:protein_P18507 rdfs:label "Gamma-aminobutyric acid receptor subunit gamma-2 (GABA(A) receptor subunit gamma-2) (GABAAR subunit gamma-2)"@en;
+  :participatesIn res:pathway_R-HSA-1236394, res:pathway_R-HSA-977443;
+  :uniprotAccession "P18507" .
+
+res:protein_P20648 rdfs:label "Potassium-transporting ATPase alpha chain 1 (EC 7.2.2.19) (Gastric H(+)/K(+) ATPase subunit alpha) (Proton pump)"@en;
+  :participatesIn res:pathway_R-HSA-936837;
+  :uniprotAccession "P20648" .
+
+res:protein_P28472 rdfs:label "Gamma-aminobutyric acid receptor subunit beta-3 (GABA(A) receptor subunit beta-3) (GABAAR subunit beta-3)"@en;
+  :participatesIn res:pathway_R-HSA-1236394, res:pathway_R-HSA-977443;
+  :uniprotAccession "P28472" .
+
+res:protein_P30556 rdfs:label "Type-1 angiotensin II receptor (AT1AR) (AT1BR) (Angiotensin II type-1 receptor) (AT1 receptor)"@en;
+  :participatesIn res:pathway_R-HSA-375276, res:pathway_R-HSA-416476, res:pathway_R-HSA-8856825;
+  :uniprotAccession "P30556" .
+
+res:protein_P34903 rdfs:label "Gamma-aminobutyric acid receptor subunit alpha-3 (GABA(A) receptor subunit alpha-3) (GABAAR subunit alpha-3)"@en;
+  :participatesIn res:pathway_R-HSA-977443;
+  :uniprotAccession "P34903" .
+
+res:protein_P47869 rdfs:label "Gamma-aminobutyric acid receptor subunit alpha-2 (GABA(A) receptor subunit alpha-2) (GABAAR subunit alpha-2)"@en;
+  :participatesIn res:pathway_R-HSA-977443;
+  :uniprotAccession "P47869" .
+
+res:protein_P47870 rdfs:label "Gamma-aminobutyric acid receptor subunit beta-2 (GABA(A) receptor subunit beta-2) (GABAAR subunit beta-2)"@en;
+  :participatesIn res:pathway_R-HSA-1236394, res:pathway_R-HSA-977443;
+  :uniprotAccession "P47870" .
+
+res:protein_P51164 rdfs:label "Potassium-transporting ATPase subunit beta (Gastric H(+)/K(+) ATPase subunit beta) (Proton pump beta chain)"@en;
+  :participatesIn res:pathway_R-HSA-936837;
+  :uniprotAccession "P51164" .
+
+res:protein_Q9N6S8 rdfs:label "Falcipain 2"@en;
+  :uniprotAccession "Q9N6S8" .
+
+_:node69 owl:distinctMembers _:node70 .
+
+_:node80 owl:distinctMembers _:node81 .
+
+_:node95 owl:distinctMembers _:node96 .
+
+_:node10 owl:minQualifiedCardinality "2"^^xsd:nonNegativeInteger .
+
+_:node37 owl:minQualifiedCardinality "1"^^xsd:nonNegativeInteger .
+
+_:node20 owl:onDataRange xsd:string .
+
+_:node39 owl:onDataRange xsd:double;
+  owl:qualifiedCardinality "1"^^xsd:nonNegativeInteger .
+
+_:node45 owl:onDataRange xsd:string;
+  owl:qualifiedCardinality "1"^^xsd:nonNegativeInteger .
+
+_:node29 owl:onDatatype xsd:double;
+  owl:withRestrictions _:node30 .
+
+_:node41 owl:onDatatype xsd:double;
+  owl:withRestrictions _:node42 .
+
+_:node48 owl:onDatatype xsd:double;
+  owl:withRestrictions _:node49 .
+
+_:node36 owl:qualifiedCardinality "1"^^xsd:nonNegativeInteger .
+
+_:node38 owl:qualifiedCardinality "1"^^xsd:nonNegativeInteger .
+
+_:node44 owl:qualifiedCardinality "1"^^xsd:nonNegativeInteger .
+
+<https://itb.ac.id/a5103/tubes_2> owl:versionInfo "2.3.0-lean";
+  dct:created "2026-11-21";
+  dct:description "Lean OWL 2 DL ontology integrating DrugCentral, UniProt, and Reactome for pharmacotherapy Knowledge-Graph Question Answering (KGQA)."@en;
+  dct:title "Pharmacotherapy and Drug Discovery Ontology (AI5103 Tubes 2)"@en .
+
+_:node43 xsd:minExclusive 0.0E0 .
+
+_:node50 xsd:minExclusive 0.0E0 .
+
+_:node31 xsd:minInclusive 1.0E2 .
+
+res:approval_APR000253 :approvalDate "2001-11-07";
+  :approvedBy res:agency_ema .
+
+res:approval_APR000254 :approvalDate "2001-05-10";
+  :approvedBy res:agency_fda .
+
+res:approval_APR000383 :approvalDate "1995-04-14";
+  :approvedBy res:agency_fda .
+
+res:approval_APR000445 :approvalDate "2006-07-28";
+  :approvedBy res:agency_ema .
+
+res:approval_APR000446 :approvalDate "1995-03-03";
+  :approvedBy res:agency_fda .
+
+res:approval_APR000447 :approvalDate "1961-01-01";
+  :approvedBy res:agency_pmda .
+
+res:approval_APR000636 :approvalDate "1989-09-14";
+  :approvedBy res:agency_fda .
+
+res:approval_APR000894 :approvalDate "1998-09-13";
+  :approvedBy res:agency_ema .
+
+res:approval_APR000895 :approvalDate "1998-03-27";
+  :approvedBy res:agency_fda .
+
+res:approval_APR000973 :approvalDate "1996-12-17";
+  :approvedBy res:agency_fda .
+
+res:approval_APR002293 :approvalDate "2000-08-28";
+  :approvedBy res:agency_ema .
+
+res:approval_APR002294 :approvalDate "1998-09-25";
+  :approvedBy res:agency_fda .
+
+res:approval_APR002295 :approvalDate "2001-04-04";
+  :approvedBy res:agency_pmda .
+
+res:approval_APR003728 :approvalDate "1949-10-31";
+  :approvedBy res:agency_fda .
+
+res:approval_APR003756 :approvalDate "1987-10-22";
+  :approvedBy res:agency_fda .
+
+res:approval_APR003879 :approvalDate "1963-11-15";
+  :approvedBy res:agency_fda .
+
+res:signal_SIG002946 :llrScore 5.981245E3;
+  :reportsEvent res:ae_10011906 .
+
+res:signal_SIG002953 :llrScore 1.953464E3;
+  :reportsEvent res:ae_10050282 .
+
+res:signal_SIG002956 :llrScore 2.445221E3;
+  :reportsEvent res:ae_10059866 .
+
+res:signal_SIG004379 :llrScore 8.27779E2;
+  :reportsEvent res:ae_10034280 .
+
+res:signal_SIG004381 :llrScore 7.56579E2;
+  :reportsEvent res:ae_10042868 .
+
+res:signal_SIG004387 :llrScore 7.5785E2;
+  :reportsEvent res:ae_10061194 .
+
+res:signal_SIG005028 :llrScore 8.379678E3;
+  :reportsEvent res:ae_10020993 .
+
+res:signal_SIG005030 :llrScore 4.4808792E4;
+  :reportsEvent res:ae_10023676 .
+
+res:signal_SIG005037 :llrScore 1.1472604E4;
+  :reportsEvent res:ae_10069339 .
+
+res:signal_SIG007101 :llrScore 2.238518E3;
+  :reportsEvent res:ae_10021027 .
+
+res:signal_SIG007102 :llrScore 2.262314E3;
+  :reportsEvent res:ae_10034280 .
+
+res:signal_SIG007112 :llrScore 3.186151E3;
+  :reportsEvent res:ae_10064848 .
+
+res:signal_SIG010012 :llrScore 3.349864E3;
+  :reportsEvent res:ae_10013968 .
+
+res:signal_SIG010023 :llrScore 3.155557E3;
+  :reportsEvent res:ae_10039163 .
+
+res:signal_SIG010027 :llrScore 4.422233E3;
+  :reportsEvent res:ae_10064911 .
+
+res:signal_SIG010691 :llrScore 4.620818E3;
+  :reportsEvent res:ae_10028411 .
+
+res:signal_SIG010696 :llrScore 3.987192E3;
+  :reportsEvent res:ae_10039020 .
+
+res:signal_SIG010706 :llrScore 4.215014E3;
+  :reportsEvent res:ae_10083073 .
+
+res:signal_SIG022965 :llrScore 6.026567E3;
+  :reportsEvent res:ae_10028584 .
+
+res:signal_SIG022972 :llrScore 4.297599E3;
+  :reportsEvent res:ae_10050528 .
+
+res:signal_SIG022976 :llrScore 3.221463E3;
+  :reportsEvent res:ae_10061818 .
+
+res:signal_SIG029116 :llrScore 8.8408E1;
+  :reportsEvent res:ae_10003246 .
+
+res:signal_SIG029117 :llrScore 8.9789E1;
+  :reportsEvent res:ae_10004146 .
+
+res:signal_SIG029122 :llrScore 1.4883E2;
+  :reportsEvent res:ae_10019717 .
+
+res:signal_SIG029131 :llrScore 1.61291E2;
+  :reportsEvent res:ae_10053762 .
+
+res:signal_SIG029135 :llrScore 1.79042E2;
+  :reportsEvent res:ae_10066901 .
+
+res:signal_SIG029443 :llrScore 1.998565E3;
+  :reportsEvent res:ae_10013700 .
+
+res:signal_SIG029454 :llrScore 1.380489E3;
+  :reportsEvent res:ae_10043255 .
+
+res:signal_SIG029459 :llrScore 1.554115E3;
+  :reportsEvent res:ae_10066371 .
+
+res:signal_SIG031113 :llrScore 3.684357E3;
+  :reportsEvent res:ae_10010144 .
+
+res:signal_SIG031115 :llrScore 1.0918615E4;
+  :reportsEvent res:ae_10013654 .
+
+res:signal_SIG031127 :llrScore 9.65577E3;
+  :reportsEvent res:ae_10070863 .
+
+res:assoc_ASSOC005619 :forDisease res:disease_21000477 .
+
+res:assoc_ASSOC005620 :forDisease res:disease_21000489 .
+
+res:assoc_ASSOC005621 :forDisease res:disease_21000490 .
+
+res:assoc_ASSOC005622 :forDisease res:disease_21000604 .
+
+res:assoc_ASSOC005623 :forDisease res:disease_21000725 .
+
+res:assoc_ASSOC005624 :forDisease res:disease_21000750 .
+
+res:assoc_ASSOC005631 :forDisease res:disease_21001432 .
+
+res:assoc_ASSOC005635 :forDisease res:disease_21001578 .
+
+res:assoc_ASSOC005642 :forDisease res:disease_21002196 .
+
+res:assoc_ASSOC007832 :forDisease res:disease_21000007 .
+
+res:assoc_ASSOC007833 :forDisease res:disease_21000599 .
+
+res:assoc_ASSOC007834 :forDisease res:disease_21000604 .
+
+res:assoc_ASSOC007835 :forDisease res:disease_21000609 .
+
+res:assoc_ASSOC007836 :forDisease res:disease_21000701 .
+
+res:assoc_ASSOC007844 :forDisease res:disease_21001432 .
+
+res:assoc_ASSOC007845 :forDisease res:disease_21001435 .
+
+res:assoc_ASSOC007846 :forDisease res:disease_21001550 .
+
+res:assoc_ASSOC007847 :forDisease res:disease_21001578 .
+
+res:assoc_ASSOC007863 :forDisease res:disease_21011259 .
+
+res:assoc_ASSOC008779 :forDisease res:disease_21000412 .
+
+res:assoc_ASSOC008780 :forDisease res:disease_21000413 .
+
+res:assoc_ASSOC008781 :forDisease res:disease_21000544 .
+
+res:assoc_ASSOC008782 :forDisease res:disease_21000594 .
+
+res:assoc_ASSOC008788 :forDisease res:disease_21000643 .
+
+res:assoc_ASSOC008800 :forDisease res:disease_21001002 .
+
+res:assoc_ASSOC008805 :forDisease res:disease_21001578 .
+
+res:assoc_ASSOC008809 :forDisease res:disease_21002196 .
+
+res:assoc_ASSOC008817 :forDisease res:disease_21002553 .
+
+res:assoc_ASSOC008825 :forDisease res:disease_21003147 .
+
+res:assoc_ASSOC008841 :forDisease res:disease_40248990 .
+
+res:assoc_ASSOC008844 :forDisease res:disease_40249729 .
+
+res:assoc_ASSOC012998 :forDisease res:disease_21000608 .
+
+res:assoc_ASSOC012999 :forDisease res:disease_21000723 .
+
+res:assoc_ASSOC013000 :forDisease res:disease_21001578 .
+
+res:assoc_ASSOC013001 :forDisease res:disease_21001992 .
+
+res:assoc_ASSOC013002 :forDisease res:disease_21001993 .
+
+res:assoc_ASSOC013011 :forDisease res:disease_21002196 .
+
+res:assoc_ASSOC013013 :forDisease res:disease_21002232 .
+
+res:assoc_ASSOC018858 :forDisease res:disease_21000480 .
+
+res:assoc_ASSOC018859 :forDisease res:disease_21000496 .
+
+res:assoc_ASSOC018860 :forDisease res:disease_21000746 .
+
+res:assoc_ASSOC018870 :forDisease res:disease_21001578 .
+
+res:assoc_ASSOC018873 :forDisease res:disease_21002196 .
+
+res:assoc_ASSOC018876 :forDisease res:disease_21002383 .
+
+res:assoc_ASSOC018884 :forDisease res:disease_21013784 .
+
+res:assoc_ASSOC019993 :forDisease res:disease_21000584 .
+
+res:assoc_ASSOC019994 :forDisease res:disease_21000701 .
+
+res:assoc_ASSOC019995 :forDisease res:disease_21000702 .
+
+res:assoc_ASSOC019996 :forDisease res:disease_21000703 .
+
+res:assoc_ASSOC019999 :forDisease res:disease_21000996 .
+
+res:assoc_ASSOC020000 :forDisease res:disease_21001161 .
+
+res:assoc_ASSOC020010 :forDisease res:disease_21002196 .
+
+res:assoc_ASSOC020019 :forDisease res:disease_21006489 .
+
+res:assoc_ASSOC034134 :forDisease res:disease_40249204 .
+
+res:assoc_ASSOC034135 :forDisease res:disease_40249213 .
+
+res:assoc_ASSOC034136 :forDisease res:disease_40249214 .
+
+res:assoc_ASSOC037169 :forDisease res:disease_21000225 .
+
+res:assoc_ASSOC037170 :forDisease res:disease_21000226 .
+
+res:assoc_ASSOC037171 :forDisease res:disease_21000229 .
+
+res:assoc_ASSOC037177 :forDisease res:disease_21000436 .
+
+res:assoc_ASSOC037178 :forDisease res:disease_21000697 .
+
+res:assoc_ASSOC037179 :forDisease res:disease_21000773 .
+
+res:assoc_ASSOC037180 :forDisease res:disease_21000774 .
+
+res:assoc_ASSOC037181 :forDisease res:disease_21000842 .
+
+res:assoc_ASSOC037191 :forDisease res:disease_21001670 .
+
+res:assoc_ASSOC037854 :forDisease res:disease_21000010 .
+
+res:assoc_ASSOC037855 :forDisease res:disease_21000012 .
+
+res:assoc_ASSOC037856 :forDisease res:disease_21000025 .
+
+res:assoc_ASSOC037857 :forDisease res:disease_21000026 .
+
+res:assoc_ASSOC037858 :forDisease res:disease_21000035 .
+
+res:assoc_ASSOC037860 :forDisease res:disease_21000051 .
+
+res:assoc_ASSOC037861 :forDisease res:disease_21000052 .
+
+res:assoc_ASSOC037872 :forDisease res:disease_21000756 .
+
+res:assoc_ASSOC037873 :forDisease res:disease_21001105 .
+
+res:assoc_ASSOC040546 :forDisease res:disease_21000090 .
+
+res:assoc_ASSOC040547 :forDisease res:disease_21000712 .
+
+res:assoc_ASSOC040548 :forDisease res:disease_21000919 .
+
+res:assoc_ASSOC040549 :forDisease res:disease_21000923 .
+
+res:assoc_ASSOC040552 :forDisease res:disease_21000970 .
+
+res:assoc_ASSOC040553 :forDisease res:disease_21001002 .
+
+res:assoc_ASSOC040554 :forDisease res:disease_21001005 .
+
+res:assoc_ASSOC040564 :forDisease res:disease_21002196 .
+
+res:assoc_ASSOC040573 :forDisease res:disease_21013911 .

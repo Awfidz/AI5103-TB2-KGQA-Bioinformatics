@@ -1,0 +1,27 @@
+# Sanity check after graphdb_materialize.sparql.
+# Expected: SmallMoleculeDrug 9, ApprovedDrug 10, HighRiskApprovedDrug 9,
+#           RepurposedApprovedDrug 7, StrongAdverseSignal 30,
+#           ProteinComplexTarget 5, ImatinibAffectsPathway 8.
+PREFIX : <https://itb.ac.id/a5103/tubes_2#>
+PREFIX res: <https://itb.ac.id/a5103/tubes_2/resource/>
+
+SELECT ?check (COUNT(DISTINCT ?x) AS ?count)
+WHERE {
+  {
+    BIND("SmallMoleculeDrug" AS ?check) ?x a :SmallMoleculeDrug .
+  } UNION {
+    BIND("ApprovedDrug" AS ?check) ?x a :ApprovedDrug .
+  } UNION {
+    BIND("HighRiskApprovedDrug" AS ?check) ?x a :HighRiskApprovedDrug .
+  } UNION {
+    BIND("RepurposedApprovedDrug" AS ?check) ?x a :RepurposedApprovedDrug .
+  } UNION {
+    BIND("StrongAdverseSignal" AS ?check) ?x a :StrongAdverseSignal .
+  } UNION {
+    BIND("ProteinComplexTarget" AS ?check) ?x a :ProteinComplexTarget .
+  } UNION {
+    BIND("ImatinibAffectsPathway" AS ?check) res:drug_1423 :affectsPathway ?x .
+  }
+}
+GROUP BY ?check
+ORDER BY ?check
